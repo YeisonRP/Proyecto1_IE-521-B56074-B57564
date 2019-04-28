@@ -54,11 +54,11 @@ void address_tag_idx_get(long address,
                         int *idx,
                         int *tag)
 {
-   //INDEX 
-*idx = address << tag_size;
-*idx = *idx >> (tag_size+offset_size);
-   //TAG 
-*tag = address >> (idx_size+offset_size);
+      //INDEX 
+   *idx = address << tag_size;
+   *idx = *idx >> (tag_size+offset_size);
+      //TAG 
+   *tag = address >> (idx_size+offset_size);
 
 }
 
@@ -70,6 +70,7 @@ int srrip_replacement_policy (int idx,
                              operation_result* result,
                              bool debug)
 {
+
    return ERROR;
 }
 
@@ -78,9 +79,67 @@ int lru_replacement_policy (int idx,
                              int tag,
                              int associativity,
                              bool loadstore,
-                             entry* cache_blocks,
+                             entry* cache_blocks,  // set de la cache
                              operation_result* result,
                              bool debug)
 {
+   bool hit_o_miss;
+   // si es hit ESTADO: TERMINADO NO PROBADO
+   hit_o_miss = false;
+   for(int i = 0; i < associativity; i++)
+   {
+      if(cache_blocks[i].tag == tag && cache_blocks[i].valid)
+      {  //ocurrio un hit de store
+         for(int j = 0; j < associativity; j++)
+         {
+            if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
+         }
+         hit_o_miss = true;
+         cache_blocks[i].rp_value = 0;
+         result->dirty_eviction = false;
+         result->evicted_address = 0;
+         if(loadstore)  // si es un hit store
+         {
+            cache_blocks[i].dirty = true; 
+            result->miss_hit = HIT_STORE; 
+         }
+         else           // si es un hit load
+         {
+            result->miss_hit = HIT_LOAD;   //
+         }
+         i = associativity;
+      }
+   }
+   
+   // si es miss. ESTADO: TERMINADO NO PROBADO
+   if(!hit_o_miss){
+      for(int i = 0; i < associativity; i++)
+      {
+         if(cache_blocks[i].rp_value == (associativity - 1))   //si es el bloque del set con menos prioridad
+         {  
+            cache_blocks[i].valid = 1;                      // Es valido ya que se va a escribir sobre el
+            result->evicted_address = cache_blocks[i].tag;  // tag que se va a expulsar
+            cache_blocks[i].tag = tag;                      // tag nuevo guardado en el set
+            result->dirty_eviction = (cache_blocks[i].dirty)? true: false;   //Si hubo dirty eviction
+            if(loadstore)
+            {
+               cache_blocks[i].dirty = true;   
+               result->miss_hit = MISS_STORE;    
+            }
+            else
+            {
+               cache_blocks[i].dirty = false;   
+               result->miss_hit = MISS_LOAD;    
+            }
+            for(int j = 0; j < associativity; j++)
+            {
+               if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
+            }
+            cache_blocks[i].rp_value = 0; // el dato mas recientemente usado en 0
+         } 
+      }
+   }
+
+
    return ERROR;
 }
