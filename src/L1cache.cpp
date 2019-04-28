@@ -23,8 +23,28 @@ int field_size_get( int cachesize_kb,
                     int *idx_size,
                     int *offset_size)
 {
- 
-  return OK;
+  //Verificando que los parametros sean multiplos de dos:
+  double cachesize_kb_double, associativity_double, blocksize_bytes_double;
+  cachesize_kb_double = log2((double)cachesize_kb*KB);
+  associativity_double = log2((double)associativity);
+  blocksize_bytes_double = log2((double)blocksize_bytes);   
+  if(cachesize_kb_double - (int)cachesize_kb_double != 0 || associativity_double - (int)associativity_double != 0 || blocksize_bytes_double - (int)blocksize_bytes_double != 0)
+  { return ERROR;   }
+
+  // Calculando offset: 
+  *offset_size = log2((double)blocksize_bytes);
+
+  // Calculando idx_size: 
+  *idx_size = log2((double) ((( cachesize_kb*KB ) / blocksize_bytes ) / associativity) );
+
+  // Calculando tag_size:
+  *tag_size = ADDRSIZE - *idx_size - *offset_size;
+
+  // Si el tag_size es menor que 0, error
+  if(*tag_size < 0)
+  {  return ERROR;  }
+
+  return OK;  
 }
 
 void address_tag_idx_get(long address,
