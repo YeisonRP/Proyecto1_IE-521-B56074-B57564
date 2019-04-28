@@ -83,9 +83,9 @@ int lru_replacement_policy (int idx,
                              operation_result* result,
                              bool debug)
 {
-   bool hit_o_miss;
+   //int adress = (tag << associativity) + idx;   // Formato: Tag + Index
+   bool hit_o_miss = false;
    // si es hit ESTADO: TERMINADO NO PROBADO
-   hit_o_miss = false;
    for(int i = 0; i < associativity; i++)
    {
       if(cache_blocks[i].tag == tag && cache_blocks[i].valid)
@@ -97,7 +97,7 @@ int lru_replacement_policy (int idx,
          hit_o_miss = true;
          cache_blocks[i].rp_value = 0;
          result->dirty_eviction = false;
-         result->evicted_address = 0;
+         result->evicted_address = NULL;
          if(loadstore)  // si es un hit store
          {
             cache_blocks[i].dirty = true; 
@@ -117,8 +117,11 @@ int lru_replacement_policy (int idx,
       {
          if(cache_blocks[i].rp_value == (associativity - 1))   //si es el bloque del set con menos prioridad
          {  
-            cache_blocks[i].valid = 1;                      // Es valido ya que se va a escribir sobre el
-            result->evicted_address = cache_blocks[i].tag;  // tag que se va a expulsar
+            //FIX------
+            result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: NULL ; //FIX: lo que se debe sacar es el adress, yo estoy manndando solo el tag porque no se como mandar toda la adress
+            //FIX------
+
+            cache_blocks[i].valid = 1;                      // Es valido ya que se va a escribir sobre el     
             cache_blocks[i].tag = tag;                      // tag nuevo guardado en el set
             result->dirty_eviction = (cache_blocks[i].dirty)? true: false;   //Si hubo dirty eviction
             if(loadstore)
@@ -141,5 +144,5 @@ int lru_replacement_policy (int idx,
    }
 
 
-   return ERROR;
+   return OK;
 }
