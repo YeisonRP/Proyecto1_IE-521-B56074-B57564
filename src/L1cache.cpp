@@ -97,7 +97,7 @@ int lru_replacement_policy (int idx,
          hit_o_miss = true;
          cache_blocks[i].rp_value = 0;
          result->dirty_eviction = false;
-         result->evicted_address = NULL;
+         result->evicted_address = NULL; //OJO FIX
          if(loadstore)  // si es un hit store
          {
             cache_blocks[i].dirty = true; 
@@ -118,7 +118,7 @@ int lru_replacement_policy (int idx,
          if(cache_blocks[i].rp_value == (associativity - 1))   //si es el bloque del set con menos prioridad
          {  
             //FIX------
-            result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: NULL ; //FIX: lo que se debe sacar es el adress, yo estoy manndando solo el tag porque no se como mandar toda la adress
+            result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: NULL ; //FIX: lo que se debe sacar es el adress, yo estoy manndando solo el tag porque no se como mandar toda la adress y  cuidado con el null
             //FIX------
 
             cache_blocks[i].valid = 1;                      // Es valido ya que se va a escribir sobre el     
@@ -139,6 +139,7 @@ int lru_replacement_policy (int idx,
                if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
             }
             cache_blocks[i].rp_value = 0; // el dato mas recientemente usado en 0
+            i = associativity;
          } 
       }
    }
