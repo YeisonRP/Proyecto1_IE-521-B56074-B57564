@@ -65,7 +65,7 @@ TEST(L1cache, hit_miss_srrip){
         cache_line[i].tag = rand()%4096;
       }
     }
-    loadstore = (bool)i;
+    loadstore = (bool)i; // en 0 es un Load, en 1 un store
     status = srrip_replacement_policy(idx, 
                                      tag, 
                                      associativity,
@@ -114,7 +114,74 @@ TEST(L1cache, hit_miss_srrip){
  * 10. miss_hit_status == HIT_STORE
  */
 TEST(L1cache, hit_miss_lru) {
+  int status;
+  int i;
+  int idx;
+  int tag;
+  int associativity;
+  enum miss_hit_status expected_miss_hit;
+  bool loadstore = 1;
+  bool debug = 0;
+  struct operation_result result = {};
 
+  /* Fill a random cache entry */
+  idx = rand()%1024;
+  tag = rand()%4096;
+  associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 , 16
+  if (debug_on) {
+    printf("Entry Info\n idx: %d\n tag: %d\n associativity: %d\n",
+          idx,
+          tag,
+          associativity);
+  }
+  struct entry cache_line[associativity];
+  /* Check for a miss */
+  DEBUG(Checking miss operation);
+  for (i = 0 ; i < 2; i++){
+    /* Fill cache line */
+    for ( i =  0; i < associativity; i++) {
+      cache_line[i].valid = true;
+      cache_line[i].tag = rand()%4096;
+      cache_line[i].dirty = 0;
+      cache_line[i].rp_value = i;
+      while (cache_line[i].tag == tag) {  // hace que los tag de la cache nunca coincidan con el tag brindado
+        cache_line[i].tag = rand()%4096;
+      }
+    }
+    loadstore = (bool)i; // en 0 es un Load, en 1 un store
+    status = lru_replacement_policy( idx, 
+                                     tag, 
+                                     associativity,
+                                     loadstore,
+                                     cache_line,
+                                     &result,
+                                     bool(debug_on));
+
+    EXPECT_EQ(status, 0);                                   //listo
+    EXPECT_EQ(result.dirty_eviction, 0);                    //listo
+    expected_miss_hit = loadstore ? MISS_STORE: MISS_LOAD;  //listo
+    EXPECT_EQ(result.miss_hit, expected_miss_hit);          //listo
+  }
+
+  /*
+   * Check for hit: block was replaced in last iteration, if we used the same 
+   * tag now we will get a hit
+   */
+  DEBUG(Checking hit operation);
+  for (i = 0 ; i < 2; i++){
+    loadstore = (bool)i;  // en 0 es un Load, en 1 un store
+    status = lru_replacement_policy(idx, 
+                                     tag, 
+                                     associativity,
+                                     loadstore,
+                                     cache_line,
+                                     &result,
+                                     (bool)debug_on);
+    EXPECT_EQ(status, 0);
+    EXPECT_EQ(result.dirty_eviction, 0);
+    expected_miss_hit = loadstore ? HIT_STORE: HIT_LOAD;
+    EXPECT_EQ(result.miss_hit, expected_miss_hit);
+  }
 }
 
 /*
