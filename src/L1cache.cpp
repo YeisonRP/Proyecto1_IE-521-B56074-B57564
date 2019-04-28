@@ -71,6 +71,74 @@ int srrip_replacement_policy (int idx,
                              bool debug)
 {
 
+   bool hit_o_miss = false;
+        
+   for(j=0; j < associativity; j++)
+   {
+      if(cache_blocks[j].tag == tag && cache_blocks[j].valid == true)
+      {
+          // HAY HIT
+         for(int m = 0; m < associativity; m++)
+         {
+            if(cache_blocks[m].rp_value < (associativity-1)){cache_blocks[m].rp_value += 1; }
+         }
+               
+         result->dirty_eviction = false;
+         cache_blocks[j].rp_value = 0;  
+         hit_o_miss = true;
+
+         if(loadstore)  // si es un hit store
+         {
+            cache_blocks[j].dirty = true; 
+            result->miss_hit = HIT_STORE; 
+         }
+         else           // si es un hit load
+         {
+            result->miss_hit = HIT_LOAD;  
+         }
+               
+         j = associativity; // Sale del bucle.
+      }
+   }
+       // HAY MISS
+      if(!hit_o_miss)
+         {        
+            for(int m = 0; m < associativity; m++)
+            {
+               if(cache_blocks[m].rp_value == (associativity-1))
+               {
+                  cache_blocks[m].valid = true; // Lo hace valido.
+                  cache_blocks[m].tag = tag;   // Guarda el nuevo tag.
+
+                  result->dirty_eviction = (cache_blocks[m].dirty)? true: false;   //Si hubo dirty eviction
+                  
+                  if(loadstore) // hay un miss store 
+                  {
+                     cache_blocks[m].dirty = true;   
+                     result->miss_hit = MISS_STORE;    
+                  }
+                  else        // hay un miss load
+                  {
+                     cache_blocks[m].dirty = false;   
+                     result->miss_hit = MISS_LOAD;    
+                  }
+
+                  for(int g = 0; g < associativity; g++)
+                  {
+                     if(cache_blocks[g].rp_value < (associativity - 1)){  cache_blocks[g].rp_value += 1;   }  //suma 1 a la politica de remplazo
+                  }
+                        
+                  cache_blocks[m].rp_value = (associativity <= 2) ? 0:2; // Si la asociatividad es <= 2, el valor de remplazo es 0, de lo contrario será 2.
+                        
+                  m = associativity; // Para salir del bucle.
+        
+               }    
+            }
+         }
+        
+
+
+
    return ERROR;
 }
 
