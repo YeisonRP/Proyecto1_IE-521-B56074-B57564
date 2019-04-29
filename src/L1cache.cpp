@@ -139,12 +139,11 @@ int srrip_replacement_policy (int idx,
                }  
             }
          }
+   return OK;
+}
         
 
 
-
-   return OK;
-}
 
 
 int lru_replacement_policy (int idx,
@@ -155,6 +154,14 @@ int lru_replacement_policy (int idx,
                              operation_result* result,
                              bool debug)
 {
+   // Verificar si tag e index son validos
+   if (idx < 0 || tag < 0 ) {    return ERROR;   }
+
+   // Verificar si associativity es valido
+   double associativity_double = log2((double)associativity); 
+   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
+     
+
    //int adress = (tag << associativity) + idx;   // Formato: Tag + Index
    bool hit_o_miss = false;
    // si es hit ESTADO: TERMINADO NO PROBADO
@@ -196,12 +203,12 @@ int lru_replacement_policy (int idx,
             cache_blocks[i].valid = 1;                      // Es valido ya que se va a escribir sobre el     
             cache_blocks[i].tag = tag;                      // tag nuevo guardado en el set
             result->dirty_eviction = (cache_blocks[i].dirty)? true: false;   //Si hubo dirty eviction
-            if(loadstore)
+            if(loadstore)  // si hubo miss store
             {
                cache_blocks[i].dirty = true;   
                result->miss_hit = MISS_STORE;    
             }
-            else
+            else           // si hubo miss load
             {
                cache_blocks[i].dirty = false;   
                result->miss_hit = MISS_LOAD;    

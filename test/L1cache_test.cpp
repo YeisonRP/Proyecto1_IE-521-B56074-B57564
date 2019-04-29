@@ -216,6 +216,210 @@ TEST(L1cache, promotion){
  * 10. Check dirty bit for block A is true
  */
 TEST(L1cache, writeback){
+  int status;
+  int i;
+  int associativity;
+  enum miss_hit_status expected_miss_hit;
+  bool loadstore = 0; //solo loads
+  bool debug = 0;
+  bool politica = 0;
+  struct operation_result result = {};
+
+
+
+/////////////////////      1. Choose a random policy      ///////////////////
+  politica = rand()%2;    //numero random de 0 a 1
+
+/////////////////////      2. Choose a random associativity      ///////////////////
+  associativity = 2 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+
+
+  struct entry cache_line[associativity];
+
+  if (debug_on) {
+    printf("Entry Info\n associativity: %d\n  Politica Remplazo (0 LRU, 1 SRRIP): %d\n",
+          associativity,
+          politica);
+  }
+
+  /* Inicializar el set del cache en valores por defecto */
+  for ( i =  0; i < associativity; i++) {
+    cache_line[i].valid = false;
+    cache_line[i].tag = 0;
+    cache_line[i].dirty = 0;
+    cache_line[i].rp_value = associativity-1;
+  }  
+
+/////////////////////      3. Fill a cache entry with only read operations:      ///////////////////
+  int idx = rand()%1024;
+  int tag[associativity]; 
+  tag[0] = rand()%4096;     
+  loadstore = 0; // en 0 es un Load/read, en 1 un store/write
+  for(int i = 0; i < associativity; i++)
+  {
+    tag[i] = tag[0] + i; // Para que todos los tag ingresados sean diferentes,
+    if(politica){ // SRRIP
+    status = srrip_replacement_policy(idx, 
+                                    tag[i], 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    else{         //LRU 
+    status = lru_replacement_policy( idx, 
+                                    tag[i], 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    expected_miss_hit = MISS_LOAD;
+    EXPECT_EQ(status, 0);
+    EXPECT_EQ(result.miss_hit, expected_miss_hit);   // Se espera que todos sean miss de read   
+  }
+    
+/////////////////////      4. Force a write hit for a random block A     ///////////////////
+  
+  //forzando write hit
+  loadstore = 1; // en 0 es un Load/read, en 1 un store/write
+  int random_A = rand()%associativity; //bloque random A de la linea de la cache
+  if(politica){ // SRRIP
+  status = srrip_replacement_policy(idx, 
+                                  tag[random_A], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  else{         //LRU 
+  status = lru_replacement_policy( idx, 
+                                  tag[random_A], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  expected_miss_hit = HIT_STORE;
+  EXPECT_EQ(status, 0);
+  EXPECT_EQ(result.miss_hit, expected_miss_hit);   
+/////////////////////      5. Force a read hit for a random block B     ///////////////////
+
+
+  //forzando read hit
+  loadstore = 0; // en 0 es un Load/read, en 1 un store/write
+  int random_B = rand()%associativity;  //Calculando Bloque B
+    while(random_B == random_A){ random_B = rand()%associativity;  }
+    //printf("Random A %d,  Random B %d", random_A  , random_B);
+  
+  if(politica){ // SRRIP
+  status = srrip_replacement_policy(idx, 
+                                  tag[random_B], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  else{         //LRU 
+  status = lru_replacement_policy( idx, 
+                                  tag[random_B], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  expected_miss_hit = HIT_LOAD;
+  EXPECT_EQ(status, 0);
+  EXPECT_EQ(result.miss_hit, expected_miss_hit);     
+/////////////////////      6. Force read hit for random block A     ///////////////////
+
+  //forzando read hit
+  loadstore = 0; // en 0 es un Load/read, en 1 un store/write
+  
+  if(politica){ // SRRIP
+  status = srrip_replacement_policy(idx, 
+                                  tag[random_A], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  else{         //LRU 
+  status = lru_replacement_policy( idx, 
+                                  tag[random_A], 
+                                  associativity,
+                                  loadstore,
+                                  cache_line,
+                                  &result,
+                                  bool(debug_on));
+  }
+  expected_miss_hit = HIT_LOAD;
+  EXPECT_EQ(status, 0);
+  EXPECT_EQ(result.miss_hit, expected_miss_hit);  
+
+/////////////////////      7. Insert lines until B is evicted     ///////////////////
+
+/////////////////////      8. Check dirty_bit for block B is false     ///////////////////
+
+/////////////////////      9. Insert lines until A is evicted     ///////////////////
+
+/////////////////////      10. Check dirty bit for block A is true     ///////////////////
+
+  int tag_random;
+  bool tag_B_evicted = false; //Para saber si ya se saco el tag B
+  bool tag_A_evicted = false; //Para saber si ya se saco el tag A
+                
+  while(!tag_A_evicted || !tag_B_evicted){  // cuando ambos son verdaderos, se detiene el while
+
+    // Encontrando un tag que no se encuentre en la cache
+    for(int i = 0; i < associativity; i++)
+    {
+      if(i == 0){ tag_random = rand()%4096; } // Definiendo el tag random
+      if(tag_random == tag[i]){  i = 0;  }    // si el tag random ya es uno que esta, se comienza de nuevo el for
+    }                                         
+
+    // insert lines
+    loadstore = 0;
+    if(politica){ // SRRIP
+    status = srrip_replacement_policy(idx, 
+                                    tag_random, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    else{         //LRU 
+    status = lru_replacement_policy( idx, 
+                                    tag_random, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+
+    // Si el bloque expulsado es el A
+    if(result.evicted_address == tag[random_A] && !tag_A_evicted) 
+    {
+      tag_A_evicted = true;
+      EXPECT_EQ(result.dirty_eviction, true);
+    }
+
+    // Si el bloque expulsado es el B
+    if(result.evicted_address == tag[random_B] && !tag_B_evicted)
+    {
+      tag_B_evicted = true;
+      EXPECT_EQ(result.dirty_eviction, false);
+    }  
+  }
 
 }
 
@@ -227,7 +431,105 @@ TEST(L1cache, writeback){
  * 3. Check function returns a PARAM error condition
  */
 TEST(L1cache, boundaries){
+  
+  int status;
+  int idx_invalid;
+  int tag_invalid;
+  int associativity_invalid;
+  int idx;
+  int tag;
+  int associativity;  
+  bool politica;
+  bool loadstore = 0;
+  struct operation_result result = {};
+  // Valores validos
+  idx = rand()%1024;
+  tag = rand()%4096;
+  associativity = 1 << (rand()%4); 
 
+/////////////////////      1. Choose a random policy      ///////////////////
+  politica = rand()%2;    //numero random de 0 a 1
+
+/////////////////////      2. Choose invalid parameters for idx, tag and asociativy     ///////////////////
+
+  idx_invalid = (rand()%1024) * -1 ;
+  tag_invalid = (rand()%4096) * -1 ;
+  associativity_invalid = 1 << (rand()%4);
+  if(associativity_invalid == 1){ associativity_invalid += 2;}
+  else{associativity_invalid += 1;}
+  
+
+/////////////////////     3. Check function returns a PARAM error condition     ///////////////////
+
+  //Con Tag invalido y demas valores validos
+    if(politica){ // SRRIP
+    struct entry cache_line[associativity];
+    status = srrip_replacement_policy(idx, 
+                                    tag_invalid, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    else{         //LRU 
+    struct entry cache_line[associativity];
+    status = lru_replacement_policy( idx, 
+                                    tag_invalid, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    EXPECT_EQ(status, ERROR);
+
+  //Con index invalido y demas valores validos
+    if(politica){ // SRRIP
+    struct entry cache_line[associativity];
+    status = srrip_replacement_policy(idx_invalid, 
+                                    tag, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    else{         //LRU 
+    struct entry cache_line[associativity];
+    status = lru_replacement_policy( idx_invalid, 
+                                    tag, 
+                                    associativity,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    EXPECT_EQ(status, ERROR);
+
+
+  //Con associativity invalido y demas valores validos
+    if(politica){ // SRRIP
+    struct entry cache_line[associativity_invalid];
+    status = srrip_replacement_policy(idx, 
+                                    tag, 
+                                    associativity_invalid,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    else{         //LRU 
+    struct entry cache_line[associativity_invalid];
+    status = lru_replacement_policy( idx, 
+                                    tag, 
+                                    associativity_invalid,
+                                    loadstore,
+                                    cache_line,
+                                    &result,
+                                    bool(debug_on));
+    }
+    EXPECT_EQ(status, ERROR);
 }
 
 /* 
