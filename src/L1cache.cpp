@@ -106,6 +106,8 @@ int srrip_replacement_policy (int idx,
                {
                   if(cache_blocks[m].rp_value == (associativity-1))
                   {
+                     result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: NULL ; // Linea que me pidió
+                     
                      cache_blocks[m].valid = true; // Lo hace valido.
                      cache_blocks[m].tag = tag;   // Guarda el nuevo tag.
 
