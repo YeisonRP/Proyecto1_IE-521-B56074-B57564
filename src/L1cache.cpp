@@ -73,6 +73,13 @@ int srrip_replacement_policy (int idx,
 
    bool replace,hit_o_miss = false;
         
+    // Verificar si tag e index son validos
+   if (idx < 0 || tag < 0 ) {    return ERROR;   }
+
+   // Verificar si associativity es valido
+   double associativity_double = log2((double)associativity); 
+   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
+
    for(int j=0; j < associativity; j++)
    {
       if(cache_blocks[j].tag == tag && cache_blocks[j].valid == true)
