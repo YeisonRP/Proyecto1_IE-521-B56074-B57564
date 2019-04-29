@@ -73,7 +73,7 @@ int srrip_replacement_policy (int idx,
 
    bool replace,hit_o_miss = false;
         
-   for(j=0; j < associativity; j++)
+   for(int j=0; j < associativity; j++)
    {
       if(cache_blocks[j].tag == tag && cache_blocks[j].valid == true)
       {
@@ -141,7 +141,7 @@ int srrip_replacement_policy (int idx,
 
 
 
-   return ERROR;
+   return OK;
 }
 
 
