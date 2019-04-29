@@ -137,6 +137,7 @@ int srrip_replacement_policy (int idx,
                }  
             }
          }
+   return OK;
 }
         
 
