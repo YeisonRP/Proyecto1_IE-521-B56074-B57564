@@ -262,3 +262,40 @@ void creando_matriz_cache  (int cachesize_kb,
       } 
    }
 }
+
+void simulation_out( int cache_size_kb, 
+                     int associativity, 
+                     int block_size, 
+                     int CPU_time, 
+                     int AMAT, 
+                     double miss_rate, 
+                     double Read_miss_rate, 
+                     int Dirty, 
+                     int Load_miss,
+                     int Store_miss,
+                     int Load_hit,
+                     int Store_hit,
+                       )
+  {
+      
+    cout << "------------------------------------------\n";
+    cout << "  Cache parameters:\n";
+    cout << "------------------------------------------\n";
+    cout << "  Cache Size (KB): "<<"          " << cache_size_kb << "\n";
+    cout << "  Cache Associativity: "<<"      " << associativity << "\n";
+    cout << "  Cache Block Size (bytes):"<<"  " << block_size << "\n";
+    cout << "------------------------------------------\n";
+    cout << "  Simulation results:\n";
+    cout << "------------------------------------------\n";
+    cout << "  CPU time (cycles):"<<"         "<< CPU_time <<"\n";
+    cout << "  AMAT(cycles):"<<"              "<< AMAT << "\n";
+    cout << "  Overall: miss rate"<<"         " << miss_rate <<"\n";
+    cout << "  Read miss rate:"<<"            " << Read_miss_rate <<"\n";
+    cout << "  Dirty evictions:"<<"           " << Dirty << "\n";
+    cout << "  Load misses:"<<"               " << Load_miss << "\n";
+    cout << "  Store misses:"<<"              " << Store_miss << "\n";
+    cout << "  Load hits:"<<"                 " << Load_hit << "\n";
+    cout << "  Store hits:"<<"                " << Store_hit << "\n";
+    cout << "  Total hits:"<<"                " << (Load_hits + Store_hits) << "\n";
+    cout << "------------------------------------------\n";
+  }

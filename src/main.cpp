@@ -52,29 +52,6 @@ int main(int argc, char * argv []) {
 
 
 
-   /*void simulation_out(int cache_size_kb, int associativity, int bloq_size)
-  {
-      
-    cout << "---------------------------------------\n";
-    cout << "  Cache parameters:\n";
-    cout << "---------------------------------------\n";
-    cout << "  Cache Size (KB): "<<"          " << cache_size_kb << "\n";
-    cout << "  Cache Associativity: "<<"      " << associativity << "\n";
-    cout << "  Cache Block Size (bytes):"<<"  " << bloq_size << "\n";
-    cout << "---------------------------------------\n";
-    cout << "  Simulation results:\n";
-    cout << "---------------------------------------\n";
-    cout << "  CPU time (cycles):"<<"         0000\n";
-    cout << "  AMAT(cycles):"<<"              0000\n";
-    cout << "  Overall: miss rate"<<"         0.00\n";
-    cout << "  Read miss rate:"<<"            0.00\n";
-    cout << "  Dirty evictions:"<<"           00000\n";
-    cout << "  Load misses:"<<"               00000\n";
-    cout << "  Store misses:"<<"              00000\n";
-    cout << "  Load hits:"<<"                 00000\n";
-    cout << "  Store hits:"<<"                00000\n";
-    cout << "  Total hits:"<<"                00000\n";
-    cout << "---------------------------------------\n";
-  }*/
+   
 return 0;
 }
