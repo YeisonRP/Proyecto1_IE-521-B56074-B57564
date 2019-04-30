@@ -105,8 +105,19 @@ int main(int argc, char * argv []) {
   // ple de tipo entry que apunta al set 2.
   
 
+  //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
+  // Liberando memoria del arreglo de la cache
+  entry **cache_matrix = new entry*[*cantidad_sets];
+  for(int i = 0; i < associativity; i++)
+  {
+    delete [] cache_matrix[i];
+  }
 
+  delete [] cache_matrix;
+
+  // Liberando memoria de las demas variables
+  delete tag_size, index_size, offset_size, cantidad_sets;
 
    
 return 0;
