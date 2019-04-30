@@ -157,4 +157,34 @@ void creando_matriz_cache  (int cachesize_kb,
                             int *cantidad_sets,
                             entry** cache_matrix);
 
+/* 
+ * Imprime los resultados de la simulacion, así como los parametros ingresados.
+ * 
+ * [in] cache_size_kb: Tamano en KB de la cache
+ * [in] associativity: Numero de vias de la cache
+ * [in] block_size: Tamano del bloque en bytes
+ * [in] CPU_size: Ciclos de ejecucion
+ * [in] AMAT: 
+ * [in] miss_rate: Porcion de todas las entradas que fueron misses 
+ * [in] Read_miss_rate: Porcion de todas las entradas para leer que fueron misses
+ * [in] Dirty: Cantidad de datos que tuvieron que ser escritos en memoria luego de salir de cache
+ * [in] Load_miss: Todas las entradas que fueron misses al leer
+ * [in] Store_miss: Todas las entradas que fueron misses al escribir
+ * [in] Load_hit: Todas las entradas que fueron hits al leer
+ * [in] Store_hit: Todas las entradas que fueron hits al escribir
+ */
+
+void simulation_out( int cache_size_kb, 
+                     int associativity, 
+                     int block_size, 
+                     int CPU_time, 
+                     int AMAT, 
+                     double miss_rate, 
+                     double Read_miss_rate, 
+                     int Dirty, 
+                     int Load_miss,
+                     int Store_miss,
+                     int Load_hit,
+                     int Store_hit);                            
+
 #endif
