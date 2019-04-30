@@ -18,6 +18,24 @@ void print_usage ()
 int main(int argc, char * argv []) {
   printf("Do something :), don't forget to keep track of execution time");
   /* Parse argruments */
+  int sizeCacheKB;
+  int sizeBloqBytes;
+  int associativity;
+  int politica;       // 0 lru, 1 srrip
+  string comandos[4] = {"-t", "-a", "-l", "-rp"};
+  for(int i = 1; i <= 8; i+=2)
+  { 
+    if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[1]){ sizeBloqBytes = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[2]){ associativity = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[3])
+    {   
+      string politicas[2] = {"lru","srrip"};
+      if(argv[i + 1] == politicas[0]){ politica = 0; }
+      else if(argv[i + 1] == politicas[1]){ politica = 1; }
+           else{ politica = -1; } //Error    
+    }
+  }
 
   /* Get trace's lines and start your simulation */
 
