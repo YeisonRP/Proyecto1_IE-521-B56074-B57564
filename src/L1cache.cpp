@@ -234,14 +234,13 @@ int lru_replacement_policy (int idx,
    return OK;
 }
 
-void creando_matriz_cache  (int cachesize_kb,
+void creando_matriz_cache  (int idx_size,
                             int associativity,
-                            int blocksize_bytes,
                             int *cantidad_sets,
                             entry** cache_matrix)
 {
 
-   *cantidad_sets = ( (cachesize_kb*KB) / blocksize_bytes ) / associativity;  //Filas
+   *cantidad_sets = ((int)log2(idx_size)) * associativity;  //Filas//
 
    //Creando matriz memoria dinamica de datos tipo entry
    cache_matrix = new entry*[*cantidad_sets];
