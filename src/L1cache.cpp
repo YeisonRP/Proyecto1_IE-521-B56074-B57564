@@ -234,14 +234,13 @@ int lru_replacement_policy (int idx,
    return OK;
 }
 
-void creando_matriz_cache  (int cachesize_kb,
+void creando_matriz_cache  (int idx_size,
                             int associativity,
-                            int blocksize_bytes,
                             int *cantidad_sets,
                             entry** cache_matrix)
 {
 
-   *cantidad_sets = ( (cachesize_kb*KB) / blocksize_bytes ) / associativity;  //Filas
+   *cantidad_sets = ((int)log2(idx_size)) * associativity;  //Filas//
 
    //Creando matriz memoria dinamica de datos tipo entry
    cache_matrix = new entry*[*cantidad_sets];
@@ -274,7 +273,7 @@ void simulation_out( int cache_size_kb,
                      int Load_miss,
                      int Store_miss,
                      int Load_hit,
-                     int Store_hit,
+                     int Store_hit
                        )
   {
       
@@ -296,6 +295,6 @@ void simulation_out( int cache_size_kb,
     cout << "  Store misses:"<<"              " << Store_miss << "\n";
     cout << "  Load hits:"<<"                 " << Load_hit << "\n";
     cout << "  Store hits:"<<"                " << Store_hit << "\n";
-    cout << "  Total hits:"<<"                " << (Load_hits + Store_hits) << "\n";
+    cout << "  Total hits:"<<"                " << (Load_hit + Store_hit) << "\n";
     cout << "------------------------------------------\n";
   }
