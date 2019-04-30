@@ -15,13 +15,17 @@ void print_usage ()
   exit (0);
 }
 
+using namespace std;
+
 int main(int argc, char * argv []) {
   printf("Do something :), don't forget to keep track of execution time");
+  
   /* Parse argruments */
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
   int politica;       // 0 lru, 1 srrip
+
   string comandos[4] = {"-t", "-a", "-l", "-rp"};
   for(int i = 1; i <= 8; i+=2)
   { 
@@ -36,6 +40,21 @@ int main(int argc, char * argv []) {
            else{ politica = -1; } //Error    
     }
   }
+
+  int status = 0;   // Para saber si una funcion retono error
+  int * tag_size = new int;       //tamano del tag
+  int * index_size = new int;     //tamano del index
+  int * offset_size = new int;    //tamano del offset
+
+  // Verificando los tamanos de tag index y offset
+  status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
+  if(status == ERROR){ cout << "\nSe presento un error en la funcion field_size_get()\n" << endl;}
+
+  int * cantidad_sets = new int;    //tamano del offset
+  
+
+  // Creando la matriz de la cache, donde las filas son los set y las columnas las vias
+  entry ** cache = creando_matriz_cache(*index_size,associativity,cantidad_sets);
 
   /* Get trace's lines and start your simulation */
 

@@ -234,16 +234,15 @@ int lru_replacement_policy (int idx,
    return OK;
 }
 
-void creando_matriz_cache  (int idx_size,
+entry** creando_matriz_cache  (int idx_size,
                             int associativity,
-                            int *cantidad_sets,
-                            entry** cache_matrix)
+                            int *cantidad_sets)
 {
 
    *cantidad_sets = ((int)log2(idx_size)) * associativity;  //Filas//
 
    //Creando matriz memoria dinamica de datos tipo entry
-   cache_matrix = new entry*[*cantidad_sets];
+   entry **cache_matrix = new entry*[*cantidad_sets];
    for(int i = 0; i < associativity; i++)
    {
       cache_matrix[i] = new entry[associativity];
@@ -260,6 +259,7 @@ void creando_matriz_cache  (int idx_size,
          cache_matrix[i][j].tag = 0;
       } 
    }
+   return cache_matrix;
 }
 
 void simulation_out( int cache_size_kb, 
