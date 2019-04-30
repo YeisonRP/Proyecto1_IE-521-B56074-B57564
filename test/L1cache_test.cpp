@@ -197,8 +197,108 @@ TEST(L1cache, hit_miss_lru) {
  * (where N depends of the number of ways)
  */
 TEST(L1cache, promotion){
+  int status;
+  int i;
+  int associativity;
+  int tag;
+  int idx;
+  int policy;
+  enum miss_hit_status expected_miss_hit;
+  bool loadstore = 0; //solo loads
+  bool debug = 0;
+  bool tag_A_evicted = false;
+  bool politica = 0;
+  struct operation_result result = {};
+
+    // Choose a random policy
+      policy = rand()%2;      // Escoge un valor aleatorio entre 0 y 1.
+
+    // Choose a random associativity
+      associativity = 1 << (rand()%4);  // Puede ser 1, 2, 4, 8, 16.
+
+    if (debug_on) {
+    printf("Entry Info\n associativity: %d\n  Politica Remplazo (0 LRU, 1 SRRIP): %d\n",
+          associativity,
+          policy); } 
+
+    // Fill a cache entry
+      struct entry cache_line[associativity];
+      idx = rand()%1024;
+
+      for(i=0; i<associativity; i++)
+      {
+        cache_line[i].valid = false;
+        cache_line[i].tag = 0;
+        cache_line[i].dirty = false;
+        cache_line[i].rp_value = (associativity-1);
+      } 
+
+    // Insert a new block A
+    // Force a hit on block A
+      int Block_A = 1196;  // Se elige un valor menor a 4096.
+
+      for(i = 0; i<2; i++){
+        if(politica){ // SRRIP
+        status = srrip_replacement_policy(idx, 
+                                        Block_A, 
+                                        associativity,
+                                        loadstore,
+                                        cache_line,
+                                        &result,
+                                        bool(debug_on));
+        }
+        else{         //LRU 
+        status = lru_replacement_policy( idx, 
+                                        Block_A,  
+                                        associativity,
+                                        loadstore,
+                                        cache_line,
+                                        &result,
+                                        bool(debug_on));
+        }
+        
+        // Check rp_value of block A
+        EXPECT_EQ(cache_line[0].rp_value, 0); // En la posición 0 porque ahí se va a dar el hit.
+        
+        // Keep inserting new blocks until A is evicted
+
+        for(i=0; i < associativity; i++) // Insertará N valores nuevos, donde N = associativity
+        {
+          tag = rand()%4096; // Escoge un valor random para tag
+          while(tag == Block_A){tag=rand()%4096;} // Se asegura de que sea diferente a Block_A
+          if(politica){ // SRRIP
+          status = srrip_replacement_policy(idx, 
+                                          tag, 
+                                          associativity,
+                                          loadstore,
+                                          cache_line,
+                                          &result,
+                                          bool(debug_on));
+          }
+          else{         //LRU 
+          status = lru_replacement_policy( idx, 
+                                          tag,  
+                                          associativity,
+                                          loadstore,
+                                          cache_line,
+                                          &result,
+                                          bool(debug_on));
+          }
+
+          // Si el bloque expulsado es el A
+          if(result.evicted_address == Block_A && !tag_A_evicted) 
+            {
+              tag_A_evicted = true;
+              EXPECT_EQ(tag_A_evicted, true);
+            }
+        }
+
+
+        
+    }
 
 }
+
 
 
 /*
