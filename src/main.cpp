@@ -21,6 +21,25 @@ int main(int argc, char * argv []) {
 
   /* Get trace's lines and start your simulation */
 
+  bool LS; 
+  long address;
+  int IC; 
+  char data [8];
+
+  while (data != NULL){
+    // Lee el numeral
+    cin >> data;
+    // Lee si si es load o store 
+    cin >> data;
+    LS = atoi(data);
+    // Lee la direccion
+    cin >> data;
+    address = strtol(data, NULL, 16);      
+    // Lee los IC
+    cin >> data;
+    IC = atoi(data);
+  }
+
   /* Print cache configuration */
 
   /* Print Statistics */
