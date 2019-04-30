@@ -135,4 +135,26 @@ int lru_replacement_policy (int idx,
                            entry* cache_blocks,
                            operation_result* operation_result,
                            bool debug=false);
+
+
+/* 
+ * Crea una matriz que representa la memoria cache
+ * donde las filas son los sets, y las columnas son
+ * las vias.
+ * 
+ * [in] cachesize_kb: Tamano en KB de la cache
+ * [in] associativity: Numero de vias de la cache
+ * [in] blocksize_bytes: Tamano del bloque en bytes
+ *
+ * [out] cantidad_sets: Cantidad de sets en la cache
+ * [out] cache_matrix: Puntero doble que es utilizado
+ *                     para representar la cache de 
+ *                     memoria dinamica ya inicializada
+ */
+void creando_matriz_cache  (int cachesize_kb,
+                            int associativity,
+                            int blocksize_bytes,
+                            int *cantidad_sets,
+                            entry** cache_matrix);
+
 #endif
