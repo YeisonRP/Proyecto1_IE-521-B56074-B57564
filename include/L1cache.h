@@ -155,4 +155,21 @@ void creando_matriz_cache  (int idx_size,
                             int *cantidad_sets,
                             entry** cache_matrix);
 
+
+
+void simulation_out( int cache_size_kb, 
+                     int associativity, 
+                     int block_size, 
+                     int CPU_time, 
+                     int AMAT, 
+                     double miss_rate, 
+                     double Read_miss_rate, 
+                     int Dirty, 
+                     int Load_miss,
+                     int Store_miss,
+                     int Load_hit,
+                     int Store_hit
+                       );
+
+
 #endif

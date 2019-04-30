@@ -273,7 +273,7 @@ void simulation_out( int cache_size_kb,
                      int Load_miss,
                      int Store_miss,
                      int Load_hit,
-                     int Store_hit,
+                     int Store_hit
                        )
   {
       
@@ -295,6 +295,6 @@ void simulation_out( int cache_size_kb,
     cout << "  Store misses:"<<"              " << Store_miss << "\n";
     cout << "  Load hits:"<<"                 " << Load_hit << "\n";
     cout << "  Store hits:"<<"                " << Store_hit << "\n";
-    cout << "  Total hits:"<<"                " << (Load_hits + Store_hits) << "\n";
+    cout << "  Total hits:"<<"                " << (Load_hit + Store_hit) << "\n";
     cout << "------------------------------------------\n";
   }
