@@ -1,1 +1,0 @@
-/usr/bin/c++    -rdynamic CMakeFiles/cachetest.dir/L1cache_test.cpp.o CMakeFiles/cachetest.dir/__/src/debug_utilities.cpp.o CMakeFiles/cachetest.dir/__/src/L1cache.cpp.o  -o cachetest -Wl,-Bstatic -lgtest -Wl,-Bdynamic -lpthread 
