@@ -1,9 +1,11 @@
 # Proyecto I IE521 Simulador de Caché - Yeison Rodriguez B56074 - Pablo Vargas B57564
 
-Este proyecto consiste en un simulador de memoria cache tipo Write Back - Write Allocate
+Este proyecto consiste en un simulador de memoria caché tipo Write Back - Write Allocate
 en arquitectura de 32 bits
-Permite utilizar dos políticas de remplazo, SSRIP y LRU
-Esta memoria cache usa el framework gtest para los test, más adelante se indicará la 
+
+Esta caché permite utilizar dos políticas de remplazo, SSRIP y LRU
+
+Esta memoria caché usa el framework gtest para los test, más adelante se indicará la 
 manera de ejecutarlos.
 
 ## Formato de los datos de entrada de la cache
