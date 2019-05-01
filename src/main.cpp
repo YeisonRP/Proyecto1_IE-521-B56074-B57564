@@ -100,6 +100,9 @@ int main(int argc, char * argv []) {
       cin >> data;
       IC = atoi(data);
 
+      // Cuenta las ciclos de las instrucciones
+      IC_counter += IC;
+
     // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index----------------------
@@ -128,12 +131,21 @@ int main(int argc, char * argv []) {
 
   // -----------------Se analizan los resultados finales  ---------------------- 
 
+      double total_miss = (double)miss_hit_counter[0]+ (double)miss_hit_counter[1];
+      double total_data = total_miss + (double)miss_hit_counter[2] + (double)miss_hit_counter[3];
+      double miss_rate = total_miss/total_data;
+      double read_miss_rate = (double)miss_hit_counter[0]/total_data;
 
+      //AMAT = hit_time + miss_rate*miss_penalty (hit_time = 1 ciclo / miss_penalty = 20 ciclos)
+
+         int AMAT = 1 + miss_rate*20;
+
+      // CPU_TIME = IC + (1+20)* Load_misses
+         int CPU_time = IC_counter + (21)*miss_hit_counter[0];
 
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
-  simulation_out(sizeCacheKB,associativity,sizeBloqBytes,0,0,0.0,0.0,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
-
+  simulation_out(sizeCacheKB,associativity,sizeBloqBytes,CPU_time,AMAT,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
   /* Print cache configuration */
 
   /* Print Statistics */
