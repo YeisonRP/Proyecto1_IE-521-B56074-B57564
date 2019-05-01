@@ -82,7 +82,7 @@ int main(int argc, char * argv []) {
   int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
   int dirty_eviction_counter = 0;
   bool valido = true;
-
+  int IC_counter = 0;
   while (valido){
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
