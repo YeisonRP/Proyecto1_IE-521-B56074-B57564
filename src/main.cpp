@@ -31,8 +31,8 @@ int main(int argc, char * argv []) {
   for(int i = 1; i <= 8; i+=2)
   { 
     if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  }
-    if(argv[i] == comandos[1]){ sizeBloqBytes = atoi(argv[i + 1]);  }
-    if(argv[i] == comandos[2]){ associativity = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[1]){ associativity = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  }
     if(argv[i] == comandos[3])
     {   
       string politicas[2] = {"lru","srrip"};
