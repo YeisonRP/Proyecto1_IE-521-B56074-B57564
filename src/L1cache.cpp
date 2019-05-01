@@ -54,12 +54,16 @@ void address_tag_idx_get(long address,
                         int *idx,
                         int *tag)
 {
-      //INDEX 
-   *idx = address << tag_size;
-   *idx = *idx >> (tag_size+offset_size);
-      //TAG 
-   *tag = address >> (idx_size+offset_size);
 
+   int mascara1 = 0x7FFFFFFF;
+   *idx = address << tag_size;
+   *idx = *idx >> 1;
+   *idx = *idx & mascara1;
+   *idx = *idx >> (tag_size+offset_size - 1);
+      //TAG 
+   *tag = address >> 1;
+   *tag = *tag & mascara1;
+   *tag = address >> (idx_size+offset_size - 1) ;
 }
 
 int srrip_replacement_policy (int idx,

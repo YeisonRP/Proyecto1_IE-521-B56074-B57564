@@ -81,42 +81,48 @@ int main(int argc, char * argv []) {
   // miss_hit_counter[3]  = HIT_STORE
   int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
   int dirty_eviction_counter = 0;
+  bool valido = true;
 
-  while (data != NULL){
+  while (valido){
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
     cin >> data;
-    // Lee si si es load o store 
-    cin >> data;
-    LS = atoi(data);
-    // Lee la direccion
-    cin >> data;
-    address = strtol(data, NULL, 16);      
-    // Lee los IC
-    cin >> data;
-    IC = atoi(data);
+    if(data[0] != 35){ valido = false; }
+    else
+    {
+      // Lee si si es load o store 
+      cin >> data;
+      LS = atoi(data);
+      // Lee la direccion
+      cin >> data;
+      address = strtol(data, NULL, 16);      
+      // Lee los IC
+      cin >> data;
+      IC = atoi(data);
 
-  // -----------------Se procesan los datos de la linea----------------------
+    // -----------------Se procesan los datos de la linea----------------------
 
-        // -----------------Se obtiene el tag y el index----------------------
-    address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
-  
-        // -----------------Se ingresa en la cache segun la politica----------------------
-        if(politica == 0) 
-        {   
-          status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
-          if(status == ERROR){cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl;}
-        }
-        else  // politica == 1
-        {   
-          status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
-          if(status == ERROR){cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl;}
-        }
-
-  // -----------------Se procesan los resultados de result ----------------------      
+          // -----------------Se obtiene el tag y el index----------------------
+      address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
     
-    miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
-    if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
+          // -----------------Se ingresa en la cache segun la politica----------------------
+          if(politica == 0) 
+          {   
+            status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
+            if(status == ERROR){cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl;}
+          }
+          else  // politica == 1
+          {   
+            status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
+            if(status == ERROR){cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl;}
+          }
+
+    // -----------------Se procesan los resultados de result ----------------------      
+      
+      miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
+      if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
+    }
+
   }
 
 
