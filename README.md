@@ -12,7 +12,9 @@ Este es el formato de entrada para los datos que recibe la cache:
 # LS Dir_Hex IC
 ```
 LS: Es un booleano que es 0 en caso de un load y 1 para store
+
 Dir_Hex: Dirección en Hexadecimal
+
 IC: Es el número de instrucciones que se ejecutaron entre la referencia a memoria 
 anterior y la actual
 
@@ -74,9 +76,13 @@ trace: Son los datos que entran a la caché, en el siguiente enlace se dejan tra
 https://drive.google.com/drive/folders/15Z0Z0cpxmuLTrfKjuVrbsAw4fJ9tGI2s
 
 l1cache executable: Es el ejecutable de la caché ya compilada
+
 cache size KB: Tamaño en KB de la caché
+
 associativity: Número de vías de la caché
+
 block size in bytes: Tamaño del bloque en bytes
+
 replacement policy: Políica de remplazo utilizada, únicos valores válidos son lru y srrip
 
 A continuación se deja un ejemplo de una simulación válida:
