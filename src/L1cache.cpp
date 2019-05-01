@@ -239,11 +239,11 @@ entry** creando_matriz_cache  (int idx_size,
                             int *cantidad_sets)
 {
 
-   *cantidad_sets = ((int)log2(idx_size)) * associativity;  //Filas//
+   *cantidad_sets = pow(2,idx_size);  //Filas//
 
    //Creando matriz memoria dinamica de datos tipo entry
    entry **cache_matrix = new entry*[*cantidad_sets];
-   for(int i = 0; i < associativity; i++)
+   for(int i = 0; i < *cantidad_sets; i++)
    {
       cache_matrix[i] = new entry[associativity];
    }

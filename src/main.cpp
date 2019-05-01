@@ -99,7 +99,7 @@ int main(int argc, char * argv []) {
   // -----------------Se procesan los datos de la linea----------------------
 
         // -----------------Se obtiene el tag y el index----------------------
-    address_tag_idx_get(address, *tag_size, *index_size, *offset_size, *index, *tag); // REVISAR
+    address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
   
         // -----------------Se ingresa en la cache segun la politica----------------------
         if(politica == 0) 

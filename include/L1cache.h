@@ -90,8 +90,8 @@ void address_tag_idx_get(long address,
                          int tag_size,
                          int idx_size,
                          int offset_size,
-                         int &idx,
-                         int &tag);
+                         int *idx,
+                         int *tag);
 
 
 /* 
