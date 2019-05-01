@@ -1,54 +1,91 @@
-# Cache simulator IE521 project baseline
+# Proyecto I IE521 Simulador de Caché - Yeison Rodriguez B56074 - Pablo Vargas B57564
 
-Code base line for IE0521 cache simulation project
+Este proyecto consiste en un simulador de memoria cache tipo Write Back - Write Allocate
+en arquitectura de 32 bits
+Permite utilizar dos políticas de remplazo, SSRIP y LRU
+Esta memoria cache usa el framework gtest para los test, más adelante se indicará la 
+manera de ejecutarlos.
+
+## Formato de los datos de entrada de la cache
+Este es el formato de entrada para los datos que recibe la cache:
+```
+# LS Dir_Hex IC
+```
+LS: Es un booleano que es 0 en caso de un load y 1 para store
+Dir_Hex: Dirección en Hexadecimal
+IC: Es el número de instrucciones que se ejecutaron entre la referencia a memoria 
+anterior y la actual
+
+Ejemplo de entrada:
+```
+# 1 30003770 2
+```
+Lo cual indicaria que es un store, con la dirección hexadecimal de 8 bits 30003770 y
+se ejecutaron 2 instrucciones entre la referencia anterior y la actual
 
 
-## How to build the project
-Create a build directory and run all targets there
+## Guía para construir el proyecto
+Se debe crear el directorio build, posicionarse en el mismo y ejecutar cmake y seguidamente make
+como se presenta a continuación:
 ```
 >> mkdir build
 >> cd build
 >> cmake ..
 >> make <target> (l1cache or cachetest)
 ```
-## How to run the tests
-Go to build and make cachetest. There are several options to run the tests.
 
-1. Run all tests:
+## Guía para ejecutar los Test
+Diríjase a la carpeta build y ejecute make cachetest, existen muchas maneras de correr los test.
+
+1. Correr todos los test:
 ```
   ./test/cachetest
 ```
-2. Run only one test:
+2. Correr solo un test:
 ```
   ./test/cachetest  --gtest_filter=<test_name>
   Ex: ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip
 ```
-3. Run a test n times:
+3. Correr un test n veces:
 ```
 ./test/cachetest  --gtest_filter=<test_name> --gtest_repeat=<n>
 Ex: ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip --gtest_repeat=2
 ```
-4. Replicate test results:
+4. Replicar resultados de un test en específco:
 ```
   Each test is run with base seed, to replicate the result the same seed must be used
   ./test/cachetest  --gtest_filter=<test_name> --gtest_random_seed=<test_seed>
   ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip --gtest_random_seed=2126
 ```  
-To enable further debug on the test you need to enable debug_on variable, on your terminal
-do:
+Para habilitar el debug se debe poner esta variable en alto, es posible hacerlo desde la
+terminal de la siguiente forma:
 ```
 export TEST_DEBUG=1
 ```
-To disable the extra logging, set the  environment variable to zero.
+Si se quiere deshabilitar el debug, ponga la variable en 0
 
-## How to run the simulation
-The simulation executable is located inside the build directory (src/l1cache)
+## Guía para ejecutar las simulaciones de la caché
+Para ejecutar el programa diríjase al directorio build/src,
 ```
-gunzip -c <trace> | <l1cache executable>  -a <associativity> -mp -s <cache size KB> -l <block size in bytes> -rp <replacement policy>
+gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -rp <replacement policy>
+```
+Donde:
+trace: Son los datos que entran a la caché, en el siguiente enlace se dejan trace válidos:
+https://drive.google.com/drive/folders/15Z0Z0cpxmuLTrfKjuVrbsAw4fJ9tGI2s
+
+l1cache executable: Es el ejecutable de la caché ya compilada
+cache size KB: Tamaño en KB de la caché
+associativity: Número de vías de la caché
+block size in bytes: Tamaño del bloque en bytes
+replacement policy: Políica de remplazo utilizada, únicos valores válidos son lru y srrip
+
+A continuación se deja un ejemplo de una simulación válida:
+```
+gunzip -c mcf.trace.gz | ./l1cache -t 64 -a 4 -l 8 -rp srrip
 ```
 
-### Dependencies
-Make sure gtest is install:
+### Dependencias
+Asegúrese de tener gtest instalado:
 ```
 sudo apt-get install libgtest-dev
 
