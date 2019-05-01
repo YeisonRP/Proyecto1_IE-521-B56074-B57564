@@ -25,22 +25,29 @@ int main(int argc, char * argv []) {
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
-  int politica;       // 0 lru, 1 srrip
-
+  int politica;           // 0 lru, 1 srrip
+  int err = 0;            //Para saber si hubo error
   string comandos[4] = {"-t", "-a", "-l", "-rp"};
   for(int i = 1; i <= 8; i+=2)
   { 
-    if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  }
-    if(argv[i] == comandos[1]){ associativity = atoi(argv[i + 1]);  }
-    if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  }
+    if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  err++;  }
+    if(argv[i] == comandos[1]){ associativity = atoi(argv[i + 1]);  err++;  }
+    if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  err++;  }
     if(argv[i] == comandos[3])
     {   
       string politicas[2] = {"lru","srrip"};
-      if(argv[i + 1] == politicas[0]){ politica = 0; }
-      else if(argv[i + 1] == politicas[1]){ politica = 1; }
+      if(argv[i + 1] == politicas[0]){ politica = 0; err++; }
+      else if(argv[i + 1] == politicas[1]){ politica = 1; err++;  }
            else{ politica = -1; } //Error    
     }
   }
+  //Verificando que se encontraran los datos necesarios
+  if(err != 4)
+  {
+    cout << "\nSe presento un error encontrando los Parse argruments \n" << endl;
+    return 0; 
+  }
+
 
 
   //-----------------Se calculan los tamanos del tag, index y offset-----------------
@@ -52,7 +59,12 @@ int main(int argc, char * argv []) {
 
   // Verificando los tamanos de tag index y offset
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
-  if(status == ERROR){ cout << "\nSe presento un error en la funcion field_size_get()\n" << endl;}
+  if(status == ERROR)
+  { 
+    cout << "\nSe presento un error en la funcion field_size_get()" << endl;
+    cout << "\nEsto ocurre porque el tamano de la cache, la asociatividad o el tamano del bloque no son validos\n" << endl;
+    return 0;
+  }
 
 
 
@@ -75,11 +87,13 @@ int main(int argc, char * argv []) {
   int *index = new int;
   struct operation_result result = {};
 
+
+  int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
   // miss_hit_counter[0]  = MISS_LOAD
   // miss_hit_counter[1]  = MISS_STORE
   // miss_hit_counter[2]  = HIT_LOAD
   // miss_hit_counter[3]  = HIT_STORE
-  int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
+  
   int dirty_eviction_counter = 0;
   bool valido = true;
   int IC_counter = 0;
@@ -87,7 +101,7 @@ int main(int argc, char * argv []) {
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
     cin >> data;
-    if(data[0] != 35){ valido = false; }
+    if(data[0] != 35){ valido = false; }  // si no es un # se acaba la simulacion
     else
     {
       // Lee si si es load o store 
@@ -112,12 +126,12 @@ int main(int argc, char * argv []) {
           if(politica == 0) 
           {   
             status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
-            if(status == ERROR){cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl;}
+            if(status == ERROR){  cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
           }
           else  // politica == 1
           {   
             status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
-            if(status == ERROR){cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl;}
+            if(status == ERROR){  cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl; return 0;  }
           }
 
     // -----------------Se procesan los resultados de result ----------------------      
@@ -146,9 +160,7 @@ int main(int argc, char * argv []) {
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
   simulation_out(sizeCacheKB,associativity,sizeBloqBytes,CPU_time,AMAT,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
-  /* Print cache configuration */
 
-  /* Print Statistics */
 
 
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
