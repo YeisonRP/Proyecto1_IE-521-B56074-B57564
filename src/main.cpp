@@ -6,6 +6,7 @@
 #include <math.h>
 #include <L1cache.h>
 #include <debug_utilities.h>
+#include <ctime>
 
 
 /* Helper funtions */
@@ -18,6 +19,15 @@ void print_usage ()
 using namespace std;
 
 int main(int argc, char * argv []) {
+
+  //---------------- Se crean las variables que miden el tiempo de ejecución ------------
+
+  unsigned t0,t1;
+
+  //------------------------------- Inicia el conteo ------------------------------------
+
+  t0 = clock();
+
   printf("Do something :), don't forget to keep track of execution time");
 
   //-----------------Se leen los Parse argruments que ingresa el usuario-----------------
@@ -177,6 +187,11 @@ int main(int argc, char * argv []) {
   // Liberando memoria de las demas variables
   delete tag_size, index_size, offset_size, cantidad_sets, tag, index;
 
-   
-return 0;
+   //--------------------- Termina el conteo de tiempo y se calcula el tiempo de ejecucion---------------------
+
+    t1 = clock();
+    double exe_time = (double(t1-t0)/CLOCKS_PER_SEC);
+    cout << "Tiempo de ejecución : "<< exe_time << " segundos." << endl;
+
+  return 0;
 }

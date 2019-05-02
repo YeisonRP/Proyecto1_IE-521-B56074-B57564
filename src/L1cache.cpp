@@ -83,37 +83,40 @@ int srrip_replacement_policy (int idx,
 
    bool replace,hit_o_miss = false;
         
-    // Verificar si tag e index son validos
+//------------------------------ Verificar Si es Hit -----------------------------
    if (idx < 0 || tag < 0 ) {    return ERROR;   }
 
-   // Verificar si associativity es valido
+//------------------- Verificar si associativity es valido------------------------
    double associativity_double = log2((double)associativity); 
    if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
 
+//-----------------------------Verificar si hay un HIT----------------------------
    for(int j=0; j < associativity; j++)
    {
+	//---------------------ocurrio un hit----------------------
       if(cache_blocks[j].tag == tag && cache_blocks[j].valid == true)
       {
-          // HAY HIT
-               
+       //------------- Configura los valores para un hit-----------   
          result->dirty_eviction = false;
          cache_blocks[j].rp_value = 0;  
          hit_o_miss = true;
-
-         if(loadstore)  // si es un hit store
+	
+	//---------------------- si es un hit store----------------
+         if(loadstore)  
          {
             cache_blocks[j].dirty = true; 
             result->miss_hit = HIT_STORE; 
          }
-         else           // si es un hit load
+         //------------------- si es un hit load ------------------
+	else           
          {
             result->miss_hit = HIT_LOAD;  
          }
                
-         j = associativity; // Sale del bucle.
+         j = associativity; // -------Sale del bucle----------------
       }
    }
-       // HAY MISS
+       // ----------------------------- ocurrio un miss ------------------------
       if(!hit_o_miss)
          {        
             replace = false;
@@ -125,33 +128,36 @@ int srrip_replacement_policy (int idx,
                   {
                      result->evicted_address = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; // Linea que me pidió
                      
-                     cache_blocks[m].valid = true; // Lo hace valido.
-                     cache_blocks[m].tag = tag;   // Guarda el nuevo tag.
+                     cache_blocks[m].valid = true; // ------Lo hace valido-------
+                     cache_blocks[m].tag = tag;   // ----Guarda el nuevo tag-----
 
                      result->dirty_eviction = (cache_blocks[m].dirty)? true: false;   //Si hubo dirty eviction
-                  
-                     if(loadstore) // hay un miss store 
+               	
+		     //------------- si hay un miss store ------------------------
+                     if(loadstore) 
                      {
                         cache_blocks[m].dirty = true;   
                         result->miss_hit = MISS_STORE;    
                      }
-                     else        // hay un miss load
+		     //------------- si hay un miss load ------------------------
+                     else        
                      {
                         cache_blocks[m].dirty = false;   
                         result->miss_hit = MISS_LOAD;    
                      }
-                        
+                     //-------------- Valor para la politica de reemplazo ---------------- 
                      cache_blocks[m].rp_value = (associativity <= 2) ? 0:2; // Si la asociatividad es <= 2, el valor de remplazo es 0, de lo contrario será 2.   
-                     m = associativity; // Para salir del bucle.
+                     m = associativity; //---------- Para salir del bucle------------------
                      replace = true;
                   }    
                }
-                  // Si ninguno tiene valor de reemplazo = (asociatividad-1) se procede a aumentar los valores.
+                //------ Si ninguno tiene valor de reemplazo = (asociatividad-1) se procede a aumentar los valores-----
                if(!replace)
                {
+		//----------------------- suma 1 a la politica de remplazo---------------------------------
                   for(int g = 0; g < associativity; g++)
                      {
-                        if(cache_blocks[g].rp_value < (associativity - 1)){  cache_blocks[g].rp_value += 1;   }  //suma 1 a la politica de remplazo
+                        if(cache_blocks[g].rp_value < (associativity - 1)){  cache_blocks[g].rp_value += 1;   }  
                      }
                }  
             }
@@ -171,7 +177,7 @@ int lru_replacement_policy (int idx,
                              operation_result* result,
                              bool debug)
 {
-//------------------------------ Verificar si tag e index son valiods -----------------------------
+//------------------------------ Verificar si tag e index son validos -----------------------------
    if (idx < 0 || tag < 0 ) {    return ERROR;   }
 
 //------------------------------ Verificar si asociatividad es valido -----------------------------
