@@ -28,8 +28,6 @@ int main(int argc, char * argv []) {
 
   t0 = clock();
 
-  printf("Do something :), don't forget to keep track of execution time");
-
   //-----------------Se leen los Parse argruments que ingresa el usuario-----------------
 
   int sizeCacheKB;
