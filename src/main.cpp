@@ -165,8 +165,8 @@ int main(int argc, char * argv []) {
 
          int AMAT = 1 + miss_rate*20;
 
-      // CPU_TIME = IC + (1+20)* Load_misses
-         int CPU_time = IC_counter + (21)*miss_hit_counter[0];
+      // CPU_TIME = IC + (1+20)* Load_misses + 1*Store_misses + 1*Load_hits + 1*Store_hits
+         int CPU_time = IC_counter + (20)*miss_hit_counter[0] + total_data;
 
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
