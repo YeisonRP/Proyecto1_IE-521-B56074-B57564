@@ -67,6 +67,9 @@ int main(int argc, char * argv []) {
 
   // Verificando los tamanos de tag index y offset
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
+
+  
+
   if(status == ERROR)
   { 
     cout << "\nSe presento un error en la funcion field_size_get()" << endl;
