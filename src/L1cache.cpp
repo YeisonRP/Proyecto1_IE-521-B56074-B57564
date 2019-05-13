@@ -194,7 +194,7 @@ int lru_replacement_policy (int idx,
       {  //---------------------ocurrio un hit----------------------
          for(int j = 0; j < associativity; j++)
          {
-            if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
+            if(cache_blocks[j].rp_value < (cache_blocks[i].rp_value)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
          }
          hit_o_miss = true;
          cache_blocks[i].rp_value = 0;
