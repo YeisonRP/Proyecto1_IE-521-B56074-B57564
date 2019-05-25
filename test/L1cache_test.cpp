@@ -309,7 +309,8 @@ TEST(L1cache, promotion){
           if(result.evicted_address == Block_A && !tag_A_evicted) 
             {
               tag_A_evicted = true;
-              EXPECT_EQ(tag_A_evicted, true);
+            //  EXPECT_EQ(tag_A_evicted, true);
+              EXPECT_EQ(i,associativity-1);
             }
         }
 
