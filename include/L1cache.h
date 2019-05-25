@@ -19,13 +19,14 @@ enum returns_types {
  ERROR
 };
 
-/* Represent the cache replacement policy */
+//////////////////////////////////////////////////
+/* Type of optimization */
 enum replacement_policy{
-  LRU,
-NRU,
- RRIP,
- RANDOM 
+  VC,
+  L2,
+  NONE
 };
+//////////////////////////////////////////////////
 
 enum miss_hit_status {
  MISS_LOAD,
@@ -52,6 +53,20 @@ struct operation_result {
  bool dirty_eviction;
  int  evicted_address;
 };
+
+//////////////////////////////////////////////////
+enum miss_hit_status_vc {
+ MISS,
+ HIT
+};
+
+/* Cache replacement policy results */
+struct operation_result_vc {
+ enum miss_hit_status_vc miss_hit;
+ bool dirty_eviction;
+ int  evicted_tag;
+};
+//////////////////////////////////////////////////
 
 /* 
  *  Functions
@@ -122,6 +137,7 @@ int srrip_replacement_policy (int idx,
  * [in] idx: index field of the block
  * [in] tag: tag field of the block
  * [in] associativity: number of ways of the entry
+ * [in] opt: tipo de optimizacion con la que debe trabajar la politica
  * [in] loadstore: type of operation true if store false if load
  * [in] debug: if set to one debug information is printed
  *
@@ -131,6 +147,7 @@ int srrip_replacement_policy (int idx,
 int lru_replacement_policy (int idx,
                            int tag,
                            int associativity,
+                           int opt,
                            bool loadstore,
                            entry* cache_blocks,
                            operation_result* operation_result,
@@ -152,6 +169,28 @@ entry** creando_matriz_cache  (int idx_size,
                             int *cantidad_sets);
 
 
+///////////////////////////////////////////////////////////////////////////
+/* 
+ * Crea el victim cache y lo inicializa
+ */
+entry* creando_victim_cache  ();
+
+/*
+ * Busca un tag en el victim cache y devuelve el entry
+ * si el resultado de la operacion es OK, si el resutado
+ * es ERROR no se encontro el dato en el victim 
+ * 
+ * [in] tag: Etiqueta a buscar en el victim cache
+ * [out] entry: Bloque si se obtuvo un hit en el victim
+ * [out] operation_result: Indica si hubo miss o hit, 
+ * ademas de si se dio un dirty eviction.
+ */
+int vc_replacement_policy ( int tag,
+                            entry* cache_blocks,
+                            operation_result_vc* operation_result);
+// despues de esta funcion dependiendo de lo que retorne en el main
+// se debe ingresar en el victim
+///////////////////////////////////////////////////////////////////////////
 
 void simulation_out( int cache_size_kb, 
                      int associativity, 
