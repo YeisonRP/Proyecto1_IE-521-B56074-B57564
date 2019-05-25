@@ -20,12 +20,7 @@ enum returns_types {
 };
 
 //////////////////////////////////////////////////
-/* Type of optimization */
-enum replacement_policy{
-  VC,
-  L2,
-  NONE
-};
+
 //////////////////////////////////////////////////
 
 enum miss_hit_status {
@@ -55,6 +50,15 @@ struct operation_result {
 };
 
 //////////////////////////////////////////////////
+
+/* Type of optimization */
+enum replacement_policy{
+  VC,
+  L2,
+  NONE
+};
+
+/* Hit or miss in victim cache  */
 enum miss_hit_status_vc {
  MISS,
  HIT
@@ -147,7 +151,7 @@ int srrip_replacement_policy (int idx,
 int lru_replacement_policy (int idx,
                            int tag,
                            int associativity,
-                           int opt,
+                           int opt,           /// PARA INDICAR CUAL OPTIMIZACION ESTA FUNCIONANDO
                            bool loadstore,
                            entry* cache_blocks,
                            operation_result* operation_result,
@@ -172,8 +176,10 @@ entry** creando_matriz_cache  (int idx_size,
 ///////////////////////////////////////////////////////////////////////////
 /* 
  * Crea el victim cache y lo inicializa
+ * Return: puntero al arreglo del victim cache
  */
 entry* creando_victim_cache  ();
+
 
 /*
  * Busca un tag en el victim cache y devuelve el entry
@@ -188,8 +194,10 @@ entry* creando_victim_cache  ();
 int vc_replacement_policy ( int tag,
                             entry* cache_blocks,
                             operation_result_vc* operation_result);
+
 // despues de esta funcion dependiendo de lo que retorne en el main
 // se debe ingresar en el victim
+
 ///////////////////////////////////////////////////////////////////////////
 
 void simulation_out( int cache_size_kb, 
