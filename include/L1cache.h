@@ -19,9 +19,6 @@ enum returns_types {
  ERROR
 };
 
-//////////////////////////////////////////////////
-
-//////////////////////////////////////////////////
 
 enum miss_hit_status {
  MISS_LOAD,
@@ -37,7 +34,7 @@ enum miss_hit_status {
 /* Cache tag array fields */
 struct entry {
  bool valid ;
- bool dirty;
+ bool dirty ;
  int tag ;
  uint8_t rp_value ;
 };
@@ -51,25 +48,7 @@ struct operation_result {
 
 //////////////////////////////////////////////////
 
-/* Type of optimization */
-enum replacement_policy{
-  VC,
-  L2,
-  NONE
-};
 
-/* Hit or miss in victim cache  */
-enum miss_hit_status_vc {
- MISS,
- HIT
-};
-
-/* Cache replacement policy results */
-struct operation_result_vc {
- enum miss_hit_status_vc miss_hit;
- bool dirty_eviction;
- int  evicted_tag;
-};
 //////////////////////////////////////////////////
 
 /* 
@@ -158,6 +137,7 @@ int lru_replacement_policy (int idx,
                            bool debug=false);
 
 
+
 /* 
  * Crea una matriz que representa la memoria cache
  * donde las filas son los sets, y las columnas son
@@ -174,6 +154,28 @@ entry** creando_matriz_cache  (int idx_size,
 
 
 ///////////////////////////////////////////////////////////////////////////
+
+/* Type of optimization */
+enum replacement_policy{
+  VC,
+  L2,
+  NONE
+};
+
+/* Hit or miss in victim cache  */
+enum miss_hit_status_vc {
+ MISS,
+ HIT
+};
+
+/* Cache replacement policy results */
+struct operation_result_vc {
+ enum miss_hit_status_vc miss_hit;
+ bool dirty_eviction;
+ int  evicted_tag;
+};
+
+
 /* 
  * Crea el victim cache y lo inicializa
  * Return: puntero al arreglo del victim cache
