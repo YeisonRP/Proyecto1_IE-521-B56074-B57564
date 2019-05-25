@@ -184,6 +184,21 @@ entry* creando_victim_cache  ();
 
 
 /*
+ * Une tag e index para meter el dato en el VC  
+ * [in] tag_size: Tamano del tag de L1
+ * [in] idx_size: Tamano del index de L1
+ * [in] idx: Index a unir
+ * [in] tag: Tag a unir
+ * RETURN: retorna el tag y el index unidos para
+ * guardarlos en el victim cache
+ */
+int joining_tag_index(   int tag_size,
+                         int idx_size,
+                         int idx,
+                         int tag);
+
+
+/*
  * Busca un tag en el victim cache y devuelve el entry
  * si el resultado de la operacion es OK, si el resutado
  * es ERROR no se encontro el dato en el victim 
