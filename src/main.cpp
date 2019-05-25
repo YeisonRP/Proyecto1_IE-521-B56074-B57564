@@ -33,9 +33,9 @@ int main(int argc, char * argv []) {
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
-  int politica;           // 0 lru, 1 srrip
+  int opt;           // 0 lru, 1 srrip
   int err = 0;            //Para saber si hubo error
-  string comandos[4] = {"-t", "-a", "-l", "-rp"};
+  string comandos[4] = {"-t", "-a", "-l", "-opt"};
   for(int i = 1; i <= 8; i+=2)
   { 
     if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  err++;  }
@@ -43,10 +43,11 @@ int main(int argc, char * argv []) {
     if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  err++;  }
     if(argv[i] == comandos[3])
     {   
-      string politicas[2] = {"lru","srrip"};
-      if(argv[i + 1] == politicas[0]){ politica = 0; err++; }
-      else if(argv[i + 1] == politicas[1]){ politica = 1; err++;  }
-           else{ politica = -1; } //Error    
+      string politicas[3] = {"VC","L2","NONE"};
+      if(argv[i + 1] == politicas[0]){ opt = 0; err++; }
+      else if(argv[i + 1] == politicas[1]){ opt = 1; err++;  }
+          else if(argv[i + 1] == politicas[2]){ opt = 2; err++;  }
+            else{ opt = -1; } //Error    
     }
   }
   //Verificando que se encontraran los datos necesarios
@@ -86,7 +87,10 @@ int main(int argc, char * argv []) {
   // Creando la matriz de la cache, donde las filas son los set y las columnas las vias
   entry ** cache = creando_matriz_cache(*index_size,associativity,cantidad_sets);
 
-
+  //----------Creando la matriz de la cache L2, si se elige esta optimizacion-----------
+  if(opt==1){entry ** cacheL2 = creando_matriz_cache(*index_size+2,associativity*2,cantidad_sets);}
+                                                    // index_size +2 porque se vuelve 4 veces más grande  
+                                                    // Associativity *2 porque tiene el doble de vías
 
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
 
@@ -96,6 +100,10 @@ int main(int argc, char * argv []) {
   char data [8];
   int *tag = new int;
   int *index = new int;
+
+  // ------------------------------- SUJETO A SU CRITERIO ------------------------------
+  int *tagL2 = new int;
+  int *indexL2 = new int;
   struct operation_result result = {};
 
 
@@ -130,20 +138,23 @@ int main(int argc, char * argv []) {
 
     // -----------------Se procesan los datos de la linea----------------------
 
-          // -----------------Se obtiene el tag y el index----------------------
+          // -----------------Se obtiene el tag y el index para L1----------------------
       address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
     
+          // -----------------Se obtiene el tag y el index para L2----------------------
+      address_tag_idx_get(address, *tag_size-2, *index_size+2, *offset_size, indexL2, tagL2); // REVISAR
+
           // -----------------Se ingresa en la cache segun la politica----------------------
-          if(politica == 0) 
-          {   
+        //  if(politica == 0) 
+        //  {   
             status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
             if(status == ERROR){  cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
-          }
-          else  // politica == 1
-          {   
-            status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
-            if(status == ERROR){  cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl; return 0;  }
-          }
+        //  }
+        //  else  // politica == 1
+        //  {   
+        //    status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
+        //    if(status == ERROR){  cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl; return 0;  }
+        //  }
 
     // -----------------Se procesan los resultados de result ----------------------      
       
