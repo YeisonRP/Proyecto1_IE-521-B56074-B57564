@@ -58,6 +58,16 @@ struct operation_result {
  int  evicted_address;
 };
 
+
+/* Cache L2 replacement policy results */
+struct operation_result_L2 {
+ int MissL1;
+ int HitL1;
+ int MissL2;
+ int HitL2;
+ bool dirty_eviction;
+ int  evicted_address;
+};
 //////////////////////////////////////////////////
 
 
@@ -148,6 +158,32 @@ int lru_replacement_policy (int idx,
                            operation_result* operation_result,
                            bool debug=false);
 
+
+
+/* 
+ * Search for an address in a cache set and
+ * replaces blocks using LRU policy
+ * 
+ * [in] idx: index field of the block
+ * [in] tag: tag field of the block
+ * [in] associativity: number of ways of the entry
+ * [in] opt: tipo de optimizacion con la que debe trabajar la politica
+ * [in] loadstore: type of operation true if store false if load
+ * [in] debug: if set to one debug information is printed
+ *
+ * [in/out] cache_block: return the cache operation return (miss_hit_status)
+ * [out] result: result of the operation (returns_types)
+ */
+int lru_L1_L2_replacement_policy (int idx,
+                           int tag,
+                           int idxL2,
+                           int tagL2,
+                           int associativity,
+                           bool loadstore,
+                           entry* cache_blocks,
+                           entry* cache_blocksL2,                           
+                           operation_result* operation_result_2,
+                           bool debug=false);
 
 
 /* 
