@@ -401,33 +401,34 @@ int vc_searching ( int tag,
                    entry* victim_cache,
                    operation_result_vc* operation_result)
 {
-   for (int i = 0; i < 16; i++)
-   {  // hit
+   for (int i = 0; i < 16; i++)                                      //------ Recorriendo todo el VC
+   {  //------ HIT
       if (victim_cache[i].tag == tag && victim_cache[i].valid == 1)  //------ Si se encontro el tag en la VC
       {                                                              //------ y es valido
          operation_result->miss_hit = HIT;
          operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
-         operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado
-         for (int j = i; j > 0; j--)   // -- moviendo los elementos del cache hacia adelante
-         {
-            victim_cache[j] = victim_cache[j-1];
+         operation_result->evicted_tag = victim_cache[i].tag;        //----- tag expulsado
+         for (int j = i; j > 0; j--)            // -- moviendo los elementos del cache una posicion adelante
+         {                                      //--- con el fin de ingresar luego el primer elemento en la pos 0
+            victim_cache[j] = victim_cache[j-1];   
          }
-         return OK;
+         return OK;                             //------ Termina la funcion
       }
    }
-   // miss
-   operation_result->miss_hit = MISS;
-   for(int i = 15; i >= 0; i--)
+   //------ MISS
+   operation_result->miss_hit = MISS;        //------ Retorna miss
+   operation_result->dirty_eviction = false; //------ Este valor podria cambiar
+   for(int i = 15; i >= 0; i--)              //------ Recorriendo el VC hacia atras
    {
-      if (victim_cache[i].valid == 1)
+      if (victim_cache[i].valid == 1)        //------ Buscando el primer dato valido
       {
-         if (i == 15)
+         if (i == 15)                        //------ Si el primer dato valido es el ultimo del VC
          {
             operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
             operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado 
          }
-         for (int j = i; j > 0; j--)   // -- moviendo los datos hacia adelante
-         {
+         for (int j = i; j > 0; j--)         // -- moviendo los datos hacia adelante
+         {                                   // -- desde el primer dato valido
             victim_cache[j] = victim_cache[j-1];
          } 
          i = -1;  // saliendo del for principal  
@@ -444,8 +445,8 @@ int vc_insertion ( int tag,
                    bool dirty,
                    entry* victim_cache)
 {
-   victim_cache[0].tag = joining_tag_index(idx_size,idx,tag);
-   victim_cache[0].dirty = dirty;
-   victim_cache[0].valid = 1;
+   victim_cache[0].tag = joining_tag_index(idx_size,idx,tag); //------ Uniendo tag e index
+   victim_cache[0].dirty = dirty;                             //------ si hay bit de sucio
+   victim_cache[0].valid = 1;                                 //------ Dato valido
    return OK;
 }

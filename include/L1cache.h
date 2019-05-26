@@ -212,8 +212,20 @@ int vc_searching ( int tag,
                             operation_result_vc* operation_result);
 
 
+/*
+ * Inserta un elemento en la primer posicion del VC
+ * 
+ * [in] tag: Tag a ingresar (viene de L1)
+ * [in] idx: Index de donde viene el tag
+ * [in] idx_size: Tamano en cantidad de bits del index
+ * [in] dirty: Si el dato a ingresar esta sucio
+ * [in/out] victim_cache: Victim cache a modificar
+ */
 int vc_insertion ( int tag,
-                            entry* victim_cache);
+                   int idx,
+                   int idx_size,
+                   bool dirty,
+                   entry* victim_cache);
 
 
 // despues de esta funcion dependiendo de lo que retorne en el main
