@@ -180,7 +180,7 @@ struct operation_result_vc {
  * Crea el victim cache y lo inicializa
  * Return: puntero al arreglo del victim cache
  */
-entry* creando_victim_cache  ();
+entry* creando_victim_cache();
 
 
 /*
@@ -192,8 +192,7 @@ entry* creando_victim_cache  ();
  * RETURN: retorna el tag y el index unidos para
  * guardarlos en el victim cache
  */
-int joining_tag_index(   int tag_size,
-                         int idx_size,
+int joining_tag_index(   int idx_size,
                          int idx,
                          int tag);
 
@@ -204,13 +203,18 @@ int joining_tag_index(   int tag_size,
  * es ERROR no se encontro el dato en el victim 
  * 
  * [in] tag: Etiqueta a buscar en el victim cache
- * [out] entry: Bloque si se obtuvo un hit en el victim
+ * [in] victim_cache: victim cache
  * [out] operation_result: Indica si hubo miss o hit, 
  * ademas de si se dio un dirty eviction.
  */
-int vc_replacement_policy ( int tag,
-                            entry* cache_blocks,
+int vc_searching ( int tag,
+                            entry* victim_cache,
                             operation_result_vc* operation_result);
+
+
+int vc_insertion ( int tag,
+                            entry* victim_cache);
+
 
 // despues de esta funcion dependiendo de lo que retorne en el main
 // se debe ingresar en el victim

@@ -51,7 +51,7 @@ int field_size_get( int cachesize_kb,
   return OK;  
 }
 
-void address_tag_idx_get(long address,
+void address_tag_vc_get(long address,
                         int tag_size,
                         int idx_size,
                         int offset_size,
@@ -360,3 +360,92 @@ void simulation_out( int cache_size_kb,
       }   
     
   }
+
+
+
+
+/*
+ * FALTA TESTEAR
+ */
+entry* creando_victim_cache()
+{
+   //-----------Creando victim cache---------
+   entry *victim_cache = new entry[16];
+   for (int i = 0; i < 16; i++)
+   {
+      victim_cache[i].dirty = 0;
+      victim_cache[i].rp_value = 16;
+      victim_cache[i].tag = 0;
+      victim_cache[i].valid = 0;
+   }
+   
+   return victim_cache;
+}
+
+
+/*
+ * FALTA TESTEAR
+ */
+int joining_tag_index(   int idx_size,
+                         int idx,
+                         int tag)
+{
+   int tag_vc = tag << idx_size;
+   tag_vc = tag_vc + idx;  
+   return tag_vc;
+}
+
+// FALTA TESTEAR
+// DESPUES DE USAR SI ES HIT INGRESAR EL DATO NUEVO EN victim_cache[0]
+int vc_searching ( int tag,
+                   entry* victim_cache,
+                   operation_result_vc* operation_result)
+{
+   for (int i = 0; i < 16; i++)
+   {  // hit
+      if (victim_cache[i].tag == tag && victim_cache[i].valid == 1)  //------ Si se encontro el tag en la VC
+      {                                                              //------ y es valido
+         operation_result->miss_hit = HIT;
+         operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
+         operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado
+         for (int j = i; j > 0; j--)   // -- moviendo los elementos del cache hacia adelante
+         {
+            victim_cache[j] = victim_cache[j-1];
+         }
+         return OK;
+      }
+   }
+   // miss
+   operation_result->miss_hit = MISS;
+   for(int i = 15; i >= 0; i--)
+   {
+      if (victim_cache[i].valid == 1)
+      {
+         if (i == 15)
+         {
+            operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
+            operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado 
+         }
+         for (int j = i; j > 0; j--)   // -- moviendo los datos hacia adelante
+         {
+            victim_cache[j] = victim_cache[j-1];
+         } 
+         i = -1;  // saliendo del for principal  
+      } 
+   }
+   return OK;
+}
+
+// NECESITO SABER SI HUBO MISS EN L1 Y SI SALIO UN DATO DEL CACHE
+// FALTA TESTEAR
+int vc_insertion ( int tag,
+                   int idx,
+                   int idx_size,
+                   bool dirty,
+                   entry* victim_cache)
+{
+   victim_cache[0].tag = joining_tag_index(idx_size,idx,tag);
+   victim_cache[0].dirty = dirty;
+   victim_cache[0].valid = 1;
+   return OK;
+}
