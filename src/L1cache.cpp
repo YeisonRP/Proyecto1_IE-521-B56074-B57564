@@ -185,7 +185,7 @@ int lru_replacement_policy (int idx,
    if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
      
 
-
+   result->evicted_block = false;      //--- se asume que no salio ningun bloque
    bool hit_o_miss = false;
 //------------------------------ Verificar Si es Hit -----------------------------
    for(int i = 0; i < associativity; i++)
@@ -219,7 +219,11 @@ int lru_replacement_policy (int idx,
       {
          if(cache_blocks[i].rp_value == (associativity - 1))   
          {  //----------------si es el bloque del set con menos prioridad---------------------------
-           
+            if (cache_blocks[i].valid == 1)  //-- si el bloque con asosiatividad - 1 es valido, quiere decir
+            {                                //-- que va a salir ese bloque
+               result->evicted_block = true;
+            }
+            
             result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
             
             cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
@@ -237,7 +241,10 @@ int lru_replacement_policy (int idx,
             }
             for(int j = 0; j < associativity; j++)
             {  //----------suma 1 a los valores de remplazo correspondientes ----------------
-               if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  
+               if(cache_blocks[j].rp_value < (associativity - 1))
+               {  
+                  cache_blocks[j].rp_value += 1;   
+               }  
             }
             cache_blocks[i].rp_value = 0; //---- el dato que se ingreso/guardo con remplazo en 0-----
             i = associativity;            // ---- Termina el for ----
@@ -598,6 +605,7 @@ int joining_tag_index(   int idx_size,
 }
 
 // TESTEADA
+// si hay un miss en cache y no salio bloque, ni si quiera busque en el victim xq no va a estar, por lo que es victim miss y no usar ninguna funcion
 int vc_searching ( int tag,
                    int idx,
                    int idx_size,

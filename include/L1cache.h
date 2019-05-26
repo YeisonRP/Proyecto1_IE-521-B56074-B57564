@@ -56,6 +56,7 @@ struct operation_result {
  enum miss_hit_status miss_hit;
  bool dirty_eviction;
  int  evicted_address;
+ bool evicted_block;    //Para saber si salio un bloque
 };
 
 
@@ -152,7 +153,6 @@ int srrip_replacement_policy (int idx,
 int lru_replacement_policy (int idx,
                            int tag,
                            int associativity,
-                           int opt,           /// PARA INDICAR CUAL OPTIMIZACION ESTA FUNCIONANDO
                            bool loadstore,
                            entry* cache_blocks,
                            operation_result* operation_result,
@@ -265,6 +265,33 @@ int vc_insertion ( int tag,
                    int idx_size,
                    bool dirty,
                    entry* victim_cache);
+
+/*
+ * Funcion que se encarga de comunicar el vc con L1 y
+ * retornar lo ocurrido entre ambas caches, para registrar
+ * los datos en el main.
+ * 
+ * [in] tag: Tag a buscar en L1 o VC
+ * [in] idx: Index proveniente del tag
+ * [in] idx_size: Tamano en bits del index
+ * [in] associativity: Tamano de la associativity
+ * [in] loadstore:  Si es un load o un store
+ * [in] victim_cache: Puntero al victim cache
+ * [in] cache_blocks: Puntero al set de la cache
+ * [out] operation_result_vc: Resultados obtenidos del VC
+ * [out] operation_result_l1: Resultados obtenidos de L1
+ */
+int comun_vc_L1( int tag,
+                   int idx,
+                   int idx_size,
+                   int associativity,
+                   bool loadstore,
+                   entry* victim_cache,
+                   entry* cache_blocks,
+                   operation_result_vc* operation_result_vc,
+                   operation_result* operation_result_l1);
+
+
 
 
 
