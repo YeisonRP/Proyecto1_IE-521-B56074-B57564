@@ -398,9 +398,12 @@ int joining_tag_index(   int idx_size,
 // FALTA TESTEAR
 // DESPUES DE USAR SI ES HIT INGRESAR EL DATO NUEVO EN victim_cache[0]
 int vc_searching ( int tag,
+                   int idx,
+                   int idx_size,
                    entry* victim_cache,
                    operation_result_vc* operation_result)
 {
+   tag = joining_tag_index(idx_size,idx,tag);                        //------ Uniendo tag e index
    for (int i = 0; i < 16; i++)                                      //------ Recorriendo todo el VC
    {  //------ HIT
       if (victim_cache[i].tag == tag && victim_cache[i].valid == 1)  //------ Si se encontro el tag en la VC

@@ -203,13 +203,17 @@ int joining_tag_index(   int idx_size,
  * es ERROR no se encontro el dato en el victim 
  * 
  * [in] tag: Etiqueta a buscar en el victim cache
+ * [in] idx: Indice del que proviene el tag a buscar
+ * [in] idx_size: Tamano en cantidad de bits del index
  * [in] victim_cache: victim cache
  * [out] operation_result: Indica si hubo miss o hit, 
  * ademas de si se dio un dirty eviction.
  */
 int vc_searching ( int tag,
-                            entry* victim_cache,
-                            operation_result_vc* operation_result);
+                   int idx,
+                   int idx_size,
+                   entry* victim_cache,
+                   operation_result_vc* operation_result);
 
 
 /*
