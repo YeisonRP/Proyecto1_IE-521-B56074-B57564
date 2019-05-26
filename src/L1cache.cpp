@@ -168,7 +168,7 @@ int srrip_replacement_policy (int idx,
 
 
 
-
+// TESTEADA
 int lru_replacement_policy (int idx,
                              int tag,
                              int associativity,
@@ -658,7 +658,7 @@ int vc_searching ( int tag,
    return OK;
 }
 
-// NECESITO SABER SI HUBO MISS EN L1 Y SI SALIO UN DATO DEL CACHE
+
 // TESTEADA
 int vc_insertion ( int tag,
                    int idx,
@@ -670,4 +670,57 @@ int vc_insertion ( int tag,
    victim_cache[0].dirty = dirty;                             //------ si hay bit de sucio
    victim_cache[0].valid = 1;                                 //------ Dato valido
    return OK;
+}
+
+
+
+
+int comun_vc_L1(   int tag,
+                   int idx,
+                   int idx_size,
+                   int associativity,
+                   bool loadstore,
+                   entry* victim_cache,
+                   entry* cache_blocks,
+                   operation_result_vc* operation_result_vc,
+                   operation_result* operation_result_l1,
+                   int * misses,
+                   int * hits,
+                   int * VC_hits,
+                   int * dirty_evictions)
+{
+
+   lru_replacement_policy(idx,tag,associativity,loadstore,cache_blocks,operation_result_l1);
+   // si fue miss L1
+   if (operation_result_l1->miss_hit == MISS_LOAD || operation_result_l1->miss_hit == MISS_STORE )
+   {
+      *misses += 1;
+   }
+   // si fue hit L1  
+   if (operation_result_l1->miss_hit == HIT_LOAD || operation_result_l1->miss_hit == HIT_STORE)
+   {
+     *hits += 1;   
+   }
+   // si se saco un bloque de L1
+   if (operation_result_l1->evicted_block)   // si se saco algo del cache es la unica forma que pueda existir 
+   {                                          // un dato en VC 
+      vc_searching(tag,idx,idx_size,victim_cache,operation_result_vc);
+      vc_insertion(operation_result_l1->evicted_address,idx,idx_size,operation_result_l1->dirty_eviction,victim_cache);
+      // si fue miss en VC
+      if (operation_result_vc->miss_hit == MISS)
+      {
+         *misses += 1;
+      }
+      // si fue hit en VC
+      if (operation_result_vc->miss_hit == HIT)
+      {
+         *VC_hits += 1;
+         *hits += 1;
+      }
+      // si hubo dirty eviction en VC
+      if (operation_result_vc->dirty_eviction == 1)
+      {
+         dirty_evictions += 1;
+      }      
+   }
 }
