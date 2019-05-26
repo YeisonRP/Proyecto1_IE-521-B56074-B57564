@@ -19,6 +19,18 @@ enum returns_types {
  ERROR
 };
 
+/* Type of optimization */
+enum replacement_policy{
+  VC,
+  L2,
+  NONE
+};
+
+/* Hit or miss in victim cache  */
+enum miss_hit_status_vc {
+ MISS,
+ HIT
+};
 
 enum miss_hit_status {
  MISS_LOAD,
@@ -153,20 +165,7 @@ entry** creando_matriz_cache  (int idx_size,
                             int *cantidad_sets);
 
 
-///////////////////////////////////////////////////////////////////////////
 
-/* Type of optimization */
-enum replacement_policy{
-  VC,
-  L2,
-  NONE
-};
-
-/* Hit or miss in victim cache  */
-enum miss_hit_status_vc {
- MISS,
- HIT
-};
 
 /* Cache replacement policy results */
 struct operation_result_vc {
@@ -232,10 +231,6 @@ int vc_insertion ( int tag,
                    entry* victim_cache);
 
 
-// despues de esta funcion dependiendo de lo que retorne en el main
-// se debe ingresar en el victim
-
-///////////////////////////////////////////////////////////////////////////
 
 void simulation_out( int cache_size_kb, 
                      int associativity, 

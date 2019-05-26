@@ -365,7 +365,9 @@ void simulation_out( int cache_size_kb,
 
 
 /*
- * FALTA TESTEAR
+ * TESTEADA PERO TIENE ALGO EXTRANO YA QUE NO ME 
+ * DA SEG FAULT SI ME METO EN DIR DE MEMORIA NO
+ * PERMITIDAS, POR LO DEMAS TODO BIEN
  */
 entry* creando_victim_cache()
 {
@@ -384,7 +386,7 @@ entry* creando_victim_cache()
 
 
 /*
- * FALTA TESTEAR
+ * TESTEADA
  */
 int joining_tag_index(   int idx_size,
                          int idx,
@@ -395,8 +397,7 @@ int joining_tag_index(   int idx_size,
    return tag_vc;
 }
 
-// FALTA TESTEAR
-// DESPUES DE USAR SI ES HIT INGRESAR EL DATO NUEVO EN victim_cache[0]
+// TESTEADA
 int vc_searching ( int tag,
                    int idx,
                    int idx_size,
@@ -429,11 +430,18 @@ int vc_searching ( int tag,
          {
             operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
             operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado 
+            for (int j = i; j > 0; j--)         // -- moviendo los datos hacia adelante
+            {                                   // -- desde el primer dato valido
+               victim_cache[j] = victim_cache[j-1];
+            } 
          }
-         for (int j = i; j > 0; j--)         // -- moviendo los datos hacia adelante
-         {                                   // -- desde el primer dato valido
-            victim_cache[j] = victim_cache[j-1];
-         } 
+         else
+         {
+            for (int j = i + 1; j > 0; j--)         // -- moviendo los datos hacia adelante
+            {                                      // -- desde el primer dato valido
+               victim_cache[j] = victim_cache[j-1];
+            } 
+         }
          i = -1;  // saliendo del for principal  
       } 
    }
@@ -441,7 +449,7 @@ int vc_searching ( int tag,
 }
 
 // NECESITO SABER SI HUBO MISS EN L1 Y SI SALIO UN DATO DEL CACHE
-// FALTA TESTEAR
+// TESTEADA
 int vc_insertion ( int tag,
                    int idx,
                    int idx_size,
