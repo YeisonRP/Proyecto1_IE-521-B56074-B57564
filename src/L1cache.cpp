@@ -185,7 +185,7 @@ int lru_replacement_policy (int idx,
    if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
      
 
-
+   result->evicted_block = false;      //--- se asume que no salio ningun bloque
    bool hit_o_miss = false;
 //------------------------------ Verificar Si es Hit -----------------------------
    for(int i = 0; i < associativity; i++)
@@ -219,7 +219,11 @@ int lru_replacement_policy (int idx,
       {
          if(cache_blocks[i].rp_value == (associativity - 1))   
          {  //----------------si es el bloque del set con menos prioridad---------------------------
-           
+            if (cache_blocks[i].valid == 1)  //-- si el bloque con asosiatividad - 1 es valido, quiere decir
+            {                                //-- que va a salir ese bloque
+               result->evicted_block = true;
+            }
+            
             result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
             
             cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
@@ -237,7 +241,10 @@ int lru_replacement_policy (int idx,
             }
             for(int j = 0; j < associativity; j++)
             {  //----------suma 1 a los valores de remplazo correspondientes ----------------
-               if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1;   }  
+               if(cache_blocks[j].rp_value < (associativity - 1))
+               {  
+                  cache_blocks[j].rp_value += 1;   
+               }  
             }
             cache_blocks[i].rp_value = 0; //---- el dato que se ingreso/guardo con remplazo en 0-----
             i = associativity;            // ---- Termina el for ----
@@ -426,10 +433,39 @@ entry** creando_matriz_cache  (int idx_size,
    return cache_matrix;
 }
 
+void simulation_outL2( int cache_size_kb, 
+                     int associativity, 
+                     int block_size,   
+                     operation_result_L2* L2)
+   {
+      double L1MR = (double)L2->MissL1/double(L2->MissL1+L2->HitL1);
+      double L2MR = (double)L2->MissL2/double(L2->MissL2+L2->HitL2);
+
+      cout << "------------------------------------------\n";
+            cout << "  Cache parameters:\n";
+            cout << "------------------------------------------\n";
+            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
+            cout << "  L2 Cache Size (KB): "<<"          " << cache_size_kb*4 << "\n";
+            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
+            cout << "  Cache L2 Associativity: "<<"      " << associativity*2 << "\n";
+            cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
+            cout << "------------------------------------------\n";
+            cout << "  Simulation results:\n";
+            cout << "------------------------------------------\n";
+            cout << "  Overall miss rate"<<"         " << "000" <<"\n";
+            cout << "  L1 miss rate:"<<"            " << L1MR <<"\n";
+            cout << "  L2 miss rate:"<<"            " << L2MR<<"\n";
+            cout << "  Global miss rate:"<<"            " << "000" <<"\n";
+            cout << "  Misses (L1):"<<"               " << L2->MissL1 << "\n";
+            cout << "  Hits (L1):"<<"                 " << L2->HitL1  << "\n";
+            cout << "  Misses (L2):"<<"               " << L2->MissL2  << "\n";
+            cout << "  Hits (L2):"<<"                 " << L2->HitL2  << "\n";
+            cout << "  Dirty evictions (L2):"<<"           " << L2->dirty_eviction  << "\n";
+            cout << "------------------------------------------\n";
+   }                    
 
 
-
-void simulation_out( int cache_size_kb, 
+/*void simulation_out( int cache_size_kb, 
                      int associativity, 
                      int block_size, 
                      int CPU_time, 
@@ -509,13 +545,15 @@ void simulation_out( int cache_size_kb,
          break;
       }   
     
-  }
+  }*/
 
 
 
 
 /*
- * FALTA TESTEAR
+ * TESTEADA PERO TIENE ALGO EXTRANO YA QUE NO ME 
+ * DA SEG FAULT SI ME METO EN DIR DE MEMORIA NO
+ * PERMITIDAS, POR LO DEMAS TODO BIEN
  */
 entry* creando_victim_cache()
 {
@@ -534,7 +572,7 @@ entry* creando_victim_cache()
 
 
 /*
- * FALTA TESTEAR
+ * TESTEADA
  */
 int joining_tag_index(   int idx_size,
                          int idx,
@@ -545,8 +583,10 @@ int joining_tag_index(   int idx_size,
    return tag_vc;
 }
 
-// FALTA TESTEAR
-// DESPUES DE USAR SI ES HIT INGRESAR EL DATO NUEVO EN victim_cache[0]
+// TESTEADA
+// si hay un miss en cache y no salio bloque, ni si quiera busque en el victim xq no va a estar, 
+// por lo que es victim miss y no usar ninguna funcion
+// si no sale bloque de la cache, directo es miss de VC sin hacer nada al mismo
 int vc_searching ( int tag,
                    int idx,
                    int idx_size,
@@ -579,11 +619,18 @@ int vc_searching ( int tag,
          {
             operation_result->dirty_eviction = (victim_cache[i].dirty == 1)? true:false;  //--- Si el sucio es 1, dirty eviction
             operation_result->evicted_tag = victim_cache[i].tag;     //----- tag expulsado 
+            for (int j = i; j > 0; j--)         // -- moviendo los datos hacia adelante
+            {                                   // -- desde el primer dato valido
+               victim_cache[j] = victim_cache[j-1];
+            } 
          }
-         for (int j = i; j > 0; j--)         // -- moviendo los datos hacia adelante
-         {                                   // -- desde el primer dato valido
-            victim_cache[j] = victim_cache[j-1];
-         } 
+         else
+         {
+            for (int j = i + 1; j > 0; j--)         // -- moviendo los datos hacia adelante
+            {                                      // -- desde el primer dato valido
+               victim_cache[j] = victim_cache[j-1];
+            } 
+         }
          i = -1;  // saliendo del for principal  
       } 
    }
@@ -591,7 +638,7 @@ int vc_searching ( int tag,
 }
 
 // NECESITO SABER SI HUBO MISS EN L1 Y SI SALIO UN DATO DEL CACHE
-// FALTA TESTEAR
+// TESTEADA
 int vc_insertion ( int tag,
                    int idx,
                    int idx_size,

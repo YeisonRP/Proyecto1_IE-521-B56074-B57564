@@ -108,7 +108,7 @@ int main(int argc, char * argv []) {
   struct operation_result_L2 resultL1L2 = {};
 
 
-  //int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
+  int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
   // miss_hit_counter[0]  = MISS_LOAD
   // miss_hit_counter[1]  = MISS_STORE
   // miss_hit_counter[2]  = HIT_LOAD
@@ -157,10 +157,10 @@ int main(int argc, char * argv []) {
 
     // -----------------Se procesan los resultados de result ----------------------      
       
-      //miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
-      //if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
+      miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
+      if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
     }
-
+      
   }
 
 
@@ -175,8 +175,8 @@ int main(int argc, char * argv []) {
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
   //simulation_out(sizeCacheKB,associativity,sizeBloqBytes,opt,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
-
-
+    
+    //simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
 
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
