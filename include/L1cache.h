@@ -66,7 +66,7 @@ struct operation_result_L2 {
  int HitL1;
  int MissL2;
  int HitL2;
- bool dirty_eviction;
+ int dirty_eviction;
  int  evicted_address;
 };
 //////////////////////////////////////////////////
@@ -182,7 +182,7 @@ int lru_L1_L2_replacement_policy (int idx,
                            bool loadstore,
                            entry* cache_blocks,
                            entry* cache_blocksL2,                           
-                           operation_result* operation_result_2,
+                           operation_result_L2* operation_result_L2,
                            bool debug=false);
 
 
@@ -303,11 +303,10 @@ int comun_vc_L1( int tag,
 
 
 
-void simulation_out( int cache_size_kb, 
+/*void simulation_out( int cache_size_kb, 
                      int associativity, 
-                     int block_size, 
-                     int CPU_time, 
-                     int AMAT, 
+                     int block_size,
+                     int opt,   
                      double miss_rate, 
                      double Read_miss_rate, 
                      int Dirty, 
@@ -315,7 +314,12 @@ void simulation_out( int cache_size_kb,
                      int Store_miss,
                      int Load_hit,
                      int Store_hit
-                       );
+                       );*/
 
+void simulation_outL2( int cache_size_kb, 
+                       int associativity,  
+                       int block_size,   
+                       operation_result_L2* L2
+                       );
 
 #endif

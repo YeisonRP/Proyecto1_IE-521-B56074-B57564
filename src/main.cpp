@@ -33,7 +33,7 @@ int main(int argc, char * argv []) {
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
-  int opt;           // 0 lru, 1 srrip
+  int opt;           // 0 VC, 1 L2, 2 NONE
   int err = 0;            //Para saber si hubo error
   string comandos[4] = {"-t", "-a", "-l", "-opt"};
   for(int i = 1; i <= 8; i+=2)
@@ -88,7 +88,7 @@ int main(int argc, char * argv []) {
   entry ** cache = creando_matriz_cache(*index_size,associativity,cantidad_sets);
 
   //----------Creando la matriz de la cache L2, si se elige esta optimizacion-----------
-  if(opt==1){entry ** cacheL2 = creando_matriz_cache(*index_size+2,associativity*2,cantidad_sets);}
+  entry ** cacheL2 = creando_matriz_cache(*index_size+2,associativity*2,cantidad_sets);
                                                     // index_size +2 porque se vuelve 4 veces más grande  
                                                     // Associativity *2 porque tiene el doble de vías
 
@@ -100,11 +100,12 @@ int main(int argc, char * argv []) {
   char data [8];
   int *tag = new int;
   int *index = new int;
-
-  // ------------------------------- SUJETO A SU CRITERIO ------------------------------
+  struct operation_result result = {};
+  // ------------------------------- Si se elige la optimizacion de L2 ------------------------------
+  
   int *tagL2 = new int;
   int *indexL2 = new int;
-  struct operation_result result = {};
+  struct operation_result_L2 resultL1L2 = {};
 
 
   int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
@@ -144,46 +145,38 @@ int main(int argc, char * argv []) {
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address, *tag_size-2, *index_size+2, *offset_size, indexL2, tagL2); // REVISAR
 
-          // -----------------Se ingresa en la cache segun la politica----------------------
-        //  if(politica == 0) 
-        //  {   
+          // -----------------Se ingresa en la cache segun la optimizacion----------------------
+          if(opt == 2){   
             status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
-            if(status == ERROR){  cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
-        //  }
-        //  else  // politica == 1
-        //  {   
-        //    status = srrip_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result,0);
-        //    if(status == ERROR){  cout << "Se presento un error en la funcion srrip_replacement_policy\n" << endl; return 0;  }
-        //  }
+            if(status == ERROR){ cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
+          }
+          else if(opt== 1){   
+            status = lru_L1_L2_replacement_policy(*index, *tag,*indexL2,*tagL2, associativity, LS, cache[*index],cacheL2[*indexL2],&resultL1L2,0);
+            if(status == ERROR){  cout << "Se presento un error en la funcion lru_L1_L2_replacement_policy\n" << endl; return 0;  }
+          }
 
     // -----------------Se procesan los resultados de result ----------------------      
       
       miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
       if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
     }
-
+      
   }
 
 
   // -----------------Se analizan los resultados finales  ---------------------- 
 
-      double total_miss = (double)miss_hit_counter[0]+ (double)miss_hit_counter[1];
-      double total_data = total_miss + (double)miss_hit_counter[2] + (double)miss_hit_counter[3];
-      double miss_rate = total_miss/total_data;
-      double read_miss_rate = (double)miss_hit_counter[0]/total_data;
+      //double total_miss = (double)miss_hit_counter[0]+ (double)miss_hit_counter[1];
+      //double total_data = total_miss + (double)miss_hit_counter[2] + (double)miss_hit_counter[3];
+      //double miss_rate = total_miss/total_data;
+      //double read_miss_rate = (double)miss_hit_counter[0]/total_data;
 
-      //AMAT = hit_time + miss_rate*miss_penalty (hit_time = 1 ciclo / miss_penalty = 20 ciclos)
-
-         int AMAT = 1 + miss_rate*20;
-
-      // CPU_TIME = IC + (1+20)* Load_misses + 1*Store_misses + 1*Load_hits + 1*Store_hits
-         int CPU_time = IC_counter + (20)*miss_hit_counter[0] + total_data;
 
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
-  simulation_out(sizeCacheKB,associativity,sizeBloqBytes,CPU_time,AMAT,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
-
-
+  //simulation_out(sizeCacheKB,associativity,sizeBloqBytes,opt,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
+    
+    //simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
 
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
