@@ -44,6 +44,10 @@ struct operation_result {
  enum miss_hit_status miss_hit;
  bool dirty_eviction;
  int  evicted_address;
+ int  MISS_LOAD;
+ int  MISS_STORE;
+ int  HIT_LOAD;
+ int  HIT_STORE;
 };
 
 
@@ -53,7 +57,7 @@ struct operation_result_L2 {
  int HitL1;
  int MissL2;
  int HitL2;
- bool dirty_eviction;
+ int dirty_eviction;
  int  evicted_address;
 };
 //////////////////////////////////////////////////
@@ -275,9 +279,8 @@ int vc_insertion ( int tag,
 
 void simulation_out( int cache_size_kb, 
                      int associativity, 
-                     int block_size, 
-                     int CPU_time, 
-                     int AMAT, 
+                     int block_size,
+                     int opt,   
                      double miss_rate, 
                      double Read_miss_rate, 
                      int Dirty, 
