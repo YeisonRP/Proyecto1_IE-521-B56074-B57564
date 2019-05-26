@@ -605,7 +605,9 @@ int joining_tag_index(   int idx_size,
 }
 
 // TESTEADA
-// si hay un miss en cache y no salio bloque, ni si quiera busque en el victim xq no va a estar, por lo que es victim miss y no usar ninguna funcion
+// si hay un miss en cache y no salio bloque, ni si quiera busque en el victim xq no va a estar, 
+// por lo que es victim miss y no usar ninguna funcion
+// si no sale bloque de la cache, directo es miss de VC sin hacer nada al mismo
 int vc_searching ( int tag,
                    int idx,
                    int idx_size,
