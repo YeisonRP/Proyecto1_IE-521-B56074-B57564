@@ -216,7 +216,7 @@ struct operation_result_vc {
  * Crea el victim cache y lo inicializa
  * Return: puntero al arreglo del victim cache
  */
-entry* creando_victim_cache  ();
+entry* creando_victim_cache();
 
 
 /*
@@ -228,25 +228,45 @@ entry* creando_victim_cache  ();
  * RETURN: retorna el tag y el index unidos para
  * guardarlos en el victim cache
  */
-int joining_tag_index(   int tag_size,
-                         int idx_size,
+int joining_tag_index(   int idx_size,
                          int idx,
                          int tag);
 
 
 /*
- * Busca un tag en el victim cache y devuelve el entry
- * si el resultado de la operacion es OK, si el resutado
- * es ERROR no se encontro el dato en el victim 
+ * Busca un tag junto con el index del que proviene
+ * en el victim cache y retorna el resultado de la 
+ * operacion (miss, hit, dirty eviction)
  * 
  * [in] tag: Etiqueta a buscar en el victim cache
- * [out] entry: Bloque si se obtuvo un hit en el victim
+ * [in] idx: Indice del que proviene el tag a buscar
+ * [in] idx_size: Tamano en cantidad de bits del index
+ * [in] victim_cache: victim cache
  * [out] operation_result: Indica si hubo miss o hit, 
  * ademas de si se dio un dirty eviction.
  */
-int vc_replacement_policy ( int tag,
-                            entry* cache_blocks,
-                            operation_result_vc* operation_result);
+int vc_searching ( int tag,
+                   int idx,
+                   int idx_size,
+                   entry* victim_cache,
+                   operation_result_vc* operation_result);
+
+
+/*
+ * Inserta un elemento en la primer posicion del VC
+ * 
+ * [in] tag: Tag a ingresar (viene de L1)
+ * [in] idx: Index de donde viene el tag
+ * [in] idx_size: Tamano en cantidad de bits del index
+ * [in] dirty: Si el dato a ingresar esta sucio
+ * [in/out] victim_cache: Victim cache a modificar
+ */
+int vc_insertion ( int tag,
+                   int idx,
+                   int idx_size,
+                   bool dirty,
+                   entry* victim_cache);
+
 
 // despues de esta funcion dependiendo de lo que retorne en el main
 // se debe ingresar en el victim
