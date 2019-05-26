@@ -198,9 +198,9 @@ int joining_tag_index(   int idx_size,
 
 
 /*
- * Busca un tag en el victim cache y devuelve el entry
- * si el resultado de la operacion es OK, si el resutado
- * es ERROR no se encontro el dato en el victim 
+ * Busca un tag junto con el index del que proviene
+ * en el victim cache y retorna el resultado de la 
+ * operacion (miss, hit, dirty eviction)
  * 
  * [in] tag: Etiqueta a buscar en el victim cache
  * [in] idx: Indice del que proviene el tag a buscar
