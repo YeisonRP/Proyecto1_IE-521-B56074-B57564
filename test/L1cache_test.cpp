@@ -846,7 +846,6 @@ TEST(VC, miss_hit){
     delete[] cache[i];
   }
   delete[] cache;  
-
 }
 
 /*
