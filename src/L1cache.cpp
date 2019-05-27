@@ -266,7 +266,7 @@ int lru_L1_L2_replacement_policy (int idx,
                            entry* cache_blocks,
                            entry* cache_blocksL2,                           
                            operation_result_L2* operation_result_L2,
-                           bool debug=false)
+                           bool debug)
 {
 //------------------------------ Verificar si tag e index son validos -----------------------------
    if (idx < 0 || tag < 0 || tagL2 < 0 || idxL2 < 0) {    return ERROR;   }
