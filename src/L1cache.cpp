@@ -51,7 +51,7 @@ int field_size_get( int cachesize_kb,
   return OK;  
 }
 
-void address_tag_vc_get(long address,
+void address_tag_idx_get(long address,
                         int tag_size,
                         int idx_size,
                         int offset_size,
