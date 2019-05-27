@@ -694,6 +694,156 @@ TEST(L1cache, boundaries){
     EXPECT_EQ(status, ERROR);
 }
 
+
+
+/*
+ * VICTIM CACHE miss hit
+ * 
+ * Stimuli
+ * 1. Choose a random associativity
+ * 2. Choose a random address (AddressA)
+ * 3. Fill a victim cache with random addresses and include AddressA.
+ * 4. Fill a cache line with random addresses, making sure AddressA is not added.
+ * 5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.
+ * 
+ * Checks
+ * 1. Check operation result is a HIT
+ * 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
+ * 3. Check replacement policy values in L1 were updated properly.
+ * 4. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+TEST(VC, miss_hit){
+  int associativity;
+  int adress_A;
+ /* enum miss_hit_status expected_miss_hit;
+  bool loadstore = 0; //solo loads
+  struct operation_result result = {};*/
+
+/////////////////////      1. Choose a random associativity      ///////////////////
+  associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  
+/////////////////////      2. Choose a random address (AddressA)      ///////////////////
+   
+  adress_A = rand()%10000;    //direccion random A
+
+/////////////////////     3. Fill a victim cache with random addresses and include AddressA.      ///////////////////
+  bool random_dirty = rand()%2;
+  int adress_rand = rand()%10000;
+  entry * vc;
+  vc = creando_victim_cache();
+  for (int i = 0; i < 16; i++)
+  {
+    while (adress_rand != adress_A)
+    {
+      adress_rand = rand()%10000;
+    }  
+    vc[i].valid = 1;
+    if (i == 8)
+    {
+      vc[i].tag = adress_A;
+      vc[i].dirty = random_dirty;
+    }
+    else
+    {
+      vc[i].tag = adress_rand;
+      vc[i].dirty = 0;
+    }
+  }
+  
+
+/////////////////////     4. Fill a cache line with random addresses, making sure AddressA is not added.      ///////////////////
+  entry* set = new entry[associativity];
+  int bloque_a_salir_de_L1;
+  for (int i = 0; i < associativity; i++)
+  {
+    while (adress_rand != adress_A)
+    {
+      adress_rand = rand()%10000;
+    }  
+    set->tag = adress_rand;
+    set->dirty = 0;
+    set->valid = 1;
+    set->rp_value = i;
+    bloque_a_salir_de_L1 = adress_rand;
+  }
+
+/////////////////////     5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.      ///////////////////
+  bool loadstore = rand()%2; // 0 load 1 store
+  operation_result_vc* resultado_vc = new operation_result_vc;
+  operation_result* resultado_L1 = new operation_result;
+  int* miss = new int;
+  int* hits = new int;
+  int* vc_hits = new int;
+  int* dirty = new int;
+  int* index = new int;
+  int* tag_r = new int;
+  // reading or writing
+  address_tag_idx_get((long)adress_A,30,1,0,index,tag_r);
+  comun_vc_L1(*tag_r,*index,1,associativity,loadstore,vc,set,resultado_vc,resultado_L1,miss,hits,vc_hits,dirty);
+/*
+ * 1. Check operation result is a HIT
+ * 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
+ * 3. Check replacement policy values in L1 were updated properly.
+ * 4. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+  // 1. Check operation result is a HIT
+  EXPECT_EQ(resultado_vc->miss_hit, HIT);
+
+  // 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
+  EXPECT_EQ(vc[0].tag, bloque_a_salir_de_L1);
+
+  // 3. Check replacement policy values in L1 were updated properly.
+  for (int i = 0; i < associativity; i++)
+  {
+    if (set[i].tag == *tag_r)
+    {
+      EXPECT_EQ(set[i].rp_value, 0);
+    }
+    else
+    {
+      EXPECT_EQ((int)set[i].rp_value, i);
+    }
+  }
+
+  if (loadstore) //store
+  {
+    EXPECT_EQ(set[associativity-1].dirty, true);
+  }
+  else        // load
+  {
+    EXPECT_EQ(set[associativity-1].dirty, random_dirty);
+  }
+  
+  
+  EXPECT_EQ(resultado_vc->miss_hit, HIT);
+  delete miss, hits, vc_hits, dirty, resultado_L1, resultado_vc,index,tag_r;
+}
+
+/*
+ * VICTIM CACHE : miss miss
+ * 
+ * Stimuli
+ * 1. Choose a random associativity
+ * 2. Choose a random address (AddressA)
+ * 3. Fill a victim cache with random addresses and include, make sure AddressA is not added.
+ * 4. Fill a cache line with random addresses, make sure AddressA is not added.
+ * 5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.
+ * 
+ * Checks
+ * 1. Check operation result is a MISS
+ * 2. Check LRU data in L1 line is now in the victim cache.
+ * 3. Check LRU data in VC is discarded
+ * 4. Check replacement policy values in L1 were updated properly.
+ * 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+TEST(VC, miss_miss){
+
+
+
+}
+
 /* 
  * Gtest main function: Generates random seed, if not provided,
  * parses DEBUG flag, and execute the test suite

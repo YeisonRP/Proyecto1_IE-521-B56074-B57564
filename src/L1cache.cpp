@@ -715,7 +715,7 @@ int comun_vc_L1(   int tag,
          {
             *dirty_evictions += 1;
          }
-         if (operation_result_vc->miss_hit == HIT) // si fue hit en el VC
+         if (operation_result_vc->miss_hit == HIT & operation_result_l1->miss_hit == MISS_LOAD) // si fue hit en el VC
          {
             for (int i = 0; i < associativity; i++)
             {
@@ -726,7 +726,7 @@ int comun_vc_L1(   int tag,
       }
       else // si no hubo dirty eviction en VC
       {
-         if (operation_result_vc->miss_hit == HIT) // si fue hit en el VC
+         if (operation_result_vc->miss_hit == HIT & operation_result_l1->miss_hit == MISS_LOAD) // si fue hit en el VC
          {
             for (int i = 0; i < associativity; i++)
             {
