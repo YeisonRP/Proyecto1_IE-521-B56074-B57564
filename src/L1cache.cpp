@@ -297,7 +297,7 @@ int lru_L1_L2_replacement_policy (int idx,
             //------- si es un hit store-----------
             //--------- Busca el tag en L2 para ponerlo sucio-------
             for(int a = 0; a < associativityL2; a++){
-               if(cache_blocksL2[a].tag==tagL2){
+               if(cache_blocksL2[a].tag == tagL2){
                   cache_blocksL2[a].dirty = true;
                   a = associativityL2;
                }

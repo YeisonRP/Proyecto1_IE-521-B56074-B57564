@@ -62,16 +62,23 @@ int main(int argc, char * argv []) {
   //-----------------Se calculan los tamanos del tag, index y offset-----------------
 
   int status = 0;   // Para saber si una funcion retono error
+  int statusL2 = 0;
   int * tag_size = new int;       //tamano del tag
+  int * tag_sizeL2 = new int;       //tamano del tag
   int * index_size = new int;     //tamano del index
+  int * index_sizeL2 = new int;     //tamano del index
   int * offset_size = new int;    //tamano del offset
 
   // Verificando los tamanos de tag index y offset
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
-
   
-
-  if(status == ERROR)
+  statusL2 = field_size_get(sizeCacheKB*4,associativity*2,sizeBloqBytes,tag_sizeL2,index_sizeL2,offset_size);
+  
+  cout << "Tag L1 "<< *tag_size<< endl;
+  cout << "Tag L2 "<< *tag_sizeL2<< endl;
+  cout << "Index L1 "<< *index_size<< endl;
+  cout << "Index L2 "<< *index_sizeL2<< endl;
+  if(status == ERROR || statusL2 == ERROR)
   { 
     cout << "\nSe presento un error en la funcion field_size_get()" << endl;
     cout << "\nEsto ocurre porque el tamano de la cache, la asociatividad o el tamano del bloque no son validos\n" << endl;
@@ -88,8 +95,7 @@ int main(int argc, char * argv []) {
   entry ** cache = creando_matriz_cache(*index_size,associativity,cantidad_sets);
 
   //----------Creando la matriz de la cache L2, si se elige esta optimizacion-----------
-  entry ** cacheL2 = creando_matriz_cache(*index_size+2,associativity*2,cantidad_sets);
-                                                    // index_size +2 porque se vuelve 4 veces más grande  
+  entry ** cacheL2 = creando_matriz_cache(*index_sizeL2,associativity*2,cantidad_sets); 
                                                     // Associativity *2 porque tiene el doble de vías
 
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
@@ -143,7 +149,7 @@ int main(int argc, char * argv []) {
       address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
     
           // -----------------Se obtiene el tag y el index para L2----------------------
-      address_tag_idx_get(address, *tag_size-2, *index_size+2, *offset_size, indexL2, tagL2); // REVISAR
+      address_tag_idx_get(address, *tag_sizeL2, *index_sizeL2, *offset_size, indexL2, tagL2); // REVISAR
 
           // -----------------Se ingresa en la cache segun la optimizacion----------------------
           if(opt == 2){   
