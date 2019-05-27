@@ -266,7 +266,7 @@ int lru_L1_L2_replacement_policy (int idx,
                            entry* cache_blocks,
                            entry* cache_blocksL2,                           
                            operation_result_L2* operation_result_L2,
-                           bool debug=false)
+                           bool debug)
 {
 //------------------------------ Verificar si tag e index son validos -----------------------------
    if (idx < 0 || tag < 0 || tagL2 < 0 || idxL2 < 0) {    return ERROR;   }
@@ -673,7 +673,14 @@ int comun_vc_L1(   int tag,
    // si fue miss L1
    if (operation_result_l1->miss_hit == MISS_LOAD || operation_result_l1->miss_hit == MISS_STORE )
    {
-      *misses += 1;
+      if (!operation_result_l1->evicted_block)  // si no salio ningun bloque
+      {
+        *misses += 2;   // el miss de L1 y VC
+      }
+      else
+      {
+         *misses += 1;   // el miss de L1
+      }
    }
    // si fue hit L1  
    if (operation_result_l1->miss_hit == HIT_LOAD || operation_result_l1->miss_hit == HIT_STORE)
@@ -697,9 +704,32 @@ int comun_vc_L1(   int tag,
          *hits += 1;
       }
       // si hubo dirty eviction en VC
-      if (operation_result_vc->dirty_eviction == 1)
+      if (operation_result_vc->dirty_eviction)
       {
-         dirty_evictions += 1;
-      }      
+         if (operation_result_vc->miss_hit == MISS)   // si fue miss en el VC
+         {
+            *dirty_evictions += 1;
+         }
+         if (operation_result_vc->miss_hit == HIT) // si fue hit en el VC
+         {
+            for (int i = 0; i < associativity; i++)
+            {
+               // le agrega al bloque ingresado del VC el bit de sucio
+               if(cache_blocks[i].rp_value == 0 & cache_blocks[i].valid == 1) { cache_blocks[i].dirty = true; } 
+            }              
+         }         
+      }
+      else // si no hubo dirty eviction en VC
+      {
+         if (operation_result_vc->miss_hit == HIT) // si fue hit en el VC
+         {
+            for (int i = 0; i < associativity; i++)
+            {
+               // le agrega al bloque ingresado del VC que no es sucio
+               if(cache_blocks[i].rp_value == 0 & cache_blocks[i].valid == 1) { cache_blocks[i].dirty = false; } 
+            } 
+         }  
+      }
+            
    }
 }

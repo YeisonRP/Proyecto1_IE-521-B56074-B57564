@@ -176,7 +176,7 @@ int main(int argc, char * argv []) {
 
   //simulation_out(sizeCacheKB,associativity,sizeBloqBytes,opt,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
     
-    //simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
+    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
 
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
