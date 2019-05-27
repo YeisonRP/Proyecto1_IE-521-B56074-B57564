@@ -142,7 +142,7 @@ int main(int argc, char * argv []) {
 
       // Cuenta las ciclos de las instrucciones
       IC_counter += IC;
-
+  
     // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------

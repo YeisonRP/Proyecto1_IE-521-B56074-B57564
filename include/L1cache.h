@@ -280,6 +280,10 @@ int vc_insertion ( int tag,
  * [in] cache_blocks: Puntero al set de la cache
  * [out] operation_result_vc: Resultados obtenidos del VC
  * [out] operation_result_l1: Resultados obtenidos de L1
+ * [out] misses: cantidad de miss totales
+ * [out] hits: cantidad de hits totales
+ * [out] VC_hits: Vc hits
+ * [out] dirty_evictions: dirty evictions
  */
 int comun_vc_L1( int tag,
                    int idx,
@@ -289,7 +293,11 @@ int comun_vc_L1( int tag,
                    entry* victim_cache,
                    entry* cache_blocks,
                    operation_result_vc* operation_result_vc,
-                   operation_result* operation_result_l1);
+                   operation_result* operation_result_l1,
+                   int * misses,
+                   int * hits,
+                   int * VC_hits,
+                   int * dirty_evictions);
 
 
 
