@@ -13,7 +13,7 @@
 
 /* Globals */
 int debug_on = 0;
-
+using namespace std;
 /* Test Helpers */
 #define DEBUG(x) if (debug_on) printf("%s\n",#x)
 /*
@@ -716,27 +716,33 @@ TEST(L1cache, boundaries){
 TEST(VC, miss_hit){
   int associativity;
   int adress_A;
- /* enum miss_hit_status expected_miss_hit;
-  bool loadstore = 0; //solo loads
-  struct operation_result result = {};*/
 
 /////////////////////      1. Choose a random associativity      ///////////////////
   associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
   
 /////////////////////      2. Choose a random address (AddressA)      ///////////////////
-   
-  adress_A = rand()%10000;    //direccion random A
+
+  int idex_size = 4; //idx_size
+  int tag_random = rand()%4096; // tag random
+  int indx_random = rand()%16; // 4 bits de index
+  int tag_A = tag_random;
+  int idx_A = indx_random;
+  adress_A = joining_tag_index(idex_size,indx_random,tag_random);    //direccion random A
 
 /////////////////////     3. Fill a victim cache with random addresses and include AddressA.      ///////////////////
   bool random_dirty = rand()%2;
-  int adress_rand = rand()%10000;
+   
+  int adress_rand; 
   entry * vc;
   vc = creando_victim_cache();
   for (int i = 0; i < 16; i++)
   {
-    while (adress_rand != adress_A)
+    tag_random = rand()%4096; // tag random
+    adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+    while (adress_rand == adress_A)
     {
-      adress_rand = rand()%10000;
+      tag_random = rand()%4096; // tag random
+      adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
     }  
     vc[i].valid = 1;
     if (i == 8)
@@ -753,23 +759,29 @@ TEST(VC, miss_hit){
   
 
 /////////////////////     4. Fill a cache line with random addresses, making sure AddressA is not added.      ///////////////////
-  entry* set = new entry[associativity];
-  int bloque_a_salir_de_L1;
+  int* cantidad_sets = new int;
+  entry** cache = creando_matriz_cache(idex_size,associativity,cantidad_sets);
+  int bloque_a_estar_en_VC;
+  bool loadstore = rand()%2; // 0 load 1 store
   for (int i = 0; i < associativity; i++)
   {
-    while (adress_rand != adress_A)
+    tag_random = rand()%4096; // tag random
+    adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+    while (adress_rand == adress_A)
     {
-      adress_rand = rand()%10000;
+      tag_random = rand()%4096; // tag random
+      adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
     }  
-    set->tag = adress_rand;
-    set->dirty = 0;
-    set->valid = 1;
-    set->rp_value = i;
-    bloque_a_salir_de_L1 = adress_rand;
+    cache[indx_random][i].tag = tag_random;
+    cache[indx_random][i].dirty = 0;
+    cache[indx_random][i].valid = 1;
+    cache[indx_random][i].rp_value = i;
+    bloque_a_estar_en_VC = joining_tag_index(idex_size,indx_random,tag_random);
   }
 
 /////////////////////     5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.      ///////////////////
-  bool loadstore = rand()%2; // 0 load 1 store
+
+  
   operation_result_vc* resultado_vc = new operation_result_vc;
   operation_result* resultado_L1 = new operation_result;
   int* miss = new int;
@@ -779,8 +791,8 @@ TEST(VC, miss_hit){
   int* index = new int;
   int* tag_r = new int;
   // reading or writing
-  address_tag_idx_get((long)adress_A,30,1,0,index,tag_r);
-  comun_vc_L1(*tag_r,*index,1,associativity,loadstore,vc,set,resultado_vc,resultado_L1,miss,hits,vc_hits,dirty);
+
+  comun_vc_L1(tag_A,idx_A,idex_size,associativity,loadstore,vc,cache[indx_random],resultado_vc,resultado_L1,miss,hits,vc_hits,dirty);
 /*
  * 1. Check operation result is a HIT
  * 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
@@ -788,37 +800,53 @@ TEST(VC, miss_hit){
  * 4. Check dirty bit value of AddressA was changed accordingly with the operation performed
  */
 
+  
   // 1. Check operation result is a HIT
-  EXPECT_EQ(resultado_vc->miss_hit, HIT);
+  if (loadstore) // store
+  {
+    EXPECT_EQ(resultado_L1->miss_hit, MISS_STORE);  //revisa que fuera un miss store en L1
+  }
+  else
+  {
+    EXPECT_EQ(resultado_L1->miss_hit, MISS_LOAD); //revisa que fuera un miss load en L1
+  }
+  
+  EXPECT_EQ(resultado_vc->miss_hit, HIT); //revisa que fuera un miss store en VC
 
+  
   // 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
-  EXPECT_EQ(vc[0].tag, bloque_a_salir_de_L1);
+  EXPECT_EQ(vc[0].tag, bloque_a_estar_en_VC); //Revisa que el bloque de la cache L1 ingresara al VC
 
   // 3. Check replacement policy values in L1 were updated properly.
   for (int i = 0; i < associativity; i++)
   {
-    if (set[i].tag == *tag_r)
+    if (cache[indx_random][i].rp_value == 0)
     {
-      EXPECT_EQ(set[i].rp_value, 0);
-    }
+      EXPECT_EQ(cache[indx_random][i].tag,tag_A); //Revisa que el bloque que entro con remplazo 0 a L1                                  
+    }                                             //fuera el tag_A del VC que salio y entro a L1
     else
     {
-      EXPECT_EQ((int)set[i].rp_value, i);
+      EXPECT_EQ((int)cache[indx_random][i].rp_value, i+1);  // Revisa que los demas tengan el valor de remplazo esperado
     }
   }
-
+  // 4. Check dirty bit value of AddressA was changed accordingly with the operation performed
   if (loadstore) //store
   {
-    EXPECT_EQ(set[associativity-1].dirty, true);
+    EXPECT_EQ(cache[indx_random][associativity-1].dirty, true); // Revisa que si fue un store, bit da valido 1 en la cache
   }
   else        // load
   {
-    EXPECT_EQ(set[associativity-1].dirty, random_dirty);
+    EXPECT_EQ(cache[indx_random][associativity-1].dirty, random_dirty); // Revisa que si fue un load, bit da valido random_dirty en la cache
   }
-  
-  
-  EXPECT_EQ(resultado_vc->miss_hit, HIT);
+
+  // eliminando memoria dinamica
   delete miss, hits, vc_hits, dirty, resultado_L1, resultado_vc,index,tag_r;
+  for(int i = 0; i < associativity; i++)
+  {
+    delete[] cache[i];
+  }
+  delete[] cache;  
+
 }
 
 /*
