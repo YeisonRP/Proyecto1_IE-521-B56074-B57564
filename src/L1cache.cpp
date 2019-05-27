@@ -51,7 +51,7 @@ int field_size_get( int cachesize_kb,
   return OK;  
 }
 
-void address_tag_vc_get(long address,
+void address_tag_idx_get(long address,
                         int tag_size,
                         int idx_size,
                         int offset_size,
@@ -432,7 +432,7 @@ entry** creando_matriz_cache  (int idx_size,
    //-----------------Retorna puntero de la matriz----------------------
    return cache_matrix;
 }
-
+      
 void simulation_outL2( int cache_size_kb, 
                      int associativity, 
                      int block_size,   
