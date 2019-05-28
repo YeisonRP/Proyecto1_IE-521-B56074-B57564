@@ -302,19 +302,15 @@ int comun_vc_L1( int tag,
 
 
 
-
-/*void simulation_out( int cache_size_kb, 
+void simulation_out( int cache_size_kb, 
                      int associativity, 
-                     int block_size,
-                     int opt,   
-                     double miss_rate, 
-                     double Read_miss_rate, 
-                     int Dirty, 
-                     int Load_miss,
-                     int Store_miss,
-                     int Load_hit,
-                     int Store_hit
-                       );*/
+                     int block_size,  
+                     int misses, 
+                     int hits,
+                     int dirty_evictions,
+                     int victim_cache_hits,
+                     int opt);
+                     
 
 void simulation_outL2( int cache_size_kb, 
                        int associativity,  

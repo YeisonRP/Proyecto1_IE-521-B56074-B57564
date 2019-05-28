@@ -735,15 +735,30 @@ TEST(VC, miss_hit){
   int adress_rand; 
   entry * vc;
   vc = creando_victim_cache();
+  bool control = true;
   for (int i = 0; i < 16; i++)
   {
-    tag_random = rand()%4096; // tag random
-    adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
-    while (adress_rand == adress_A)
+    // calculando que el tag que se ingrese no este en el VC
+    control = true;
+    while (control)
     {
       tag_random = rand()%4096; // tag random
       adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
-    }  
+      while (adress_rand == adress_A)
+      {
+        tag_random = rand()%4096; // tag random
+        adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      }
+      control = false;
+      for (int j = 0; j < 16; j++)
+      {
+        if (adress_rand == vc[j].tag & vc[j].valid == true)
+        {
+          control = true;
+        } 
+      }  
+    }
+
     vc[i].valid = 1;
     if (i == 8)
     {
@@ -763,15 +778,29 @@ TEST(VC, miss_hit){
   entry** cache = creando_matriz_cache(idex_size,associativity,cantidad_sets);
   int bloque_a_estar_en_VC;
   bool loadstore = rand()%2; // 0 load 1 store
+
   for (int i = 0; i < associativity; i++)
   {
-    tag_random = rand()%4096; // tag random
-    adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
-    while (adress_rand == adress_A)
+    control = true;
+    while (control)
     {
       tag_random = rand()%4096; // tag random
       adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
-    }  
+      while (adress_rand == adress_A)
+      {
+        tag_random = rand()%4096; // tag random
+        adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      }  
+      control = false;
+      for (int j = 0; j < associativity; j++)
+      {
+        if (adress_rand == cache[indx_random][j].tag & cache[indx_random][j].valid == true)
+        {
+          control = true;
+        } 
+      }  
+    }
+
     cache[indx_random][i].tag = tag_random;
     cache[indx_random][i].dirty = 0;
     cache[indx_random][i].valid = 1;
@@ -811,7 +840,7 @@ TEST(VC, miss_hit){
     EXPECT_EQ(resultado_L1->miss_hit, MISS_LOAD); //revisa que fuera un miss load en L1
   }
   
-  EXPECT_EQ(resultado_vc->miss_hit, HIT); //revisa que fuera un miss store en VC
+  EXPECT_EQ(resultado_vc->miss_hit, HIT); //revisa que fuera un hit en VC
 
   
   // 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
@@ -867,7 +896,177 @@ TEST(VC, miss_hit){
  */
 TEST(VC, miss_miss){
 
+  int associativity;
+  int adress_A;
 
+/////////////////////      1. Choose a random associativity      ///////////////////
+  associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  
+/////////////////////      2. Choose a random address (AddressA)      ///////////////////
+
+  int idex_size = 4; //idx_size
+  int tag_random = rand()%4096; // tag random
+  int indx_random = rand()%16; // 4 bits de index
+  int tag_A = tag_random;
+  int idx_A = indx_random;
+  adress_A = joining_tag_index(idex_size,indx_random,tag_random);    //direccion random A
+
+/////////////////////     3. Fill a victim cache with random addresses and include, make sure AddressA is not added.      ///////////////////
+  bool random_dirty = rand()%2;
+   
+  int adress_rand; 
+  entry * vc;
+  vc = creando_victim_cache();
+  bool control = true;
+  for (int i = 0; i < 16; i++)
+  {
+    // calculando que el tag que se ingrese no este en el VC
+    bool control = true;
+    while (control)
+    {
+      tag_random = rand()%4096; // tag random
+      adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      while (adress_rand == adress_A)
+      {
+        tag_random = rand()%4096; // tag random
+        adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      }
+      control = false;
+      for (int j = 0; j < 16; j++)
+      {
+        if (adress_rand == vc[j].tag & vc[j].valid == true)
+        {
+          control = true;
+        } 
+      }  
+    }
+    vc[i].valid = 1;
+    vc[i].tag = adress_rand;
+    vc[i].dirty = 0;
+    
+  }
+  
+
+/////////////////////     4. Fill a cache line with random addresses, make sure AddressA is not added.      ///////////////////
+  int* cantidad_sets = new int;
+  entry** cache = creando_matriz_cache(idex_size,associativity,cantidad_sets);
+  int Bloque_a_salir_de_L1;
+  int Bloque_a_salir_de_VC = vc[15].tag;
+
+  for (int i = 0; i < associativity; i++)
+  {
+    control = true;
+    while (control)
+    {
+      tag_random = rand()%4096; // tag random
+      adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      while (adress_rand == adress_A)
+      {
+        tag_random = rand()%4096; // tag random
+        adress_rand = joining_tag_index(idex_size,indx_random,tag_random);
+      }  
+      control = false;
+      for (int j = 0; j < associativity; j++)
+      {
+        if (adress_rand == cache[indx_random][j].tag & cache[indx_random][j].valid == true)
+        {
+          control = true;
+        } 
+      }  
+    }
+
+    cache[indx_random][i].tag = tag_random;
+    cache[indx_random][i].dirty = 0;
+    cache[indx_random][i].valid = 1;
+    cache[indx_random][i].rp_value = i;
+    Bloque_a_salir_de_L1 = joining_tag_index(idex_size,indx_random,tag_random);
+  }
+
+/////////////////////     5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.      ///////////////////
+  bool loadstore = rand()%2; // 0 load 1 store
+  
+  operation_result_vc* resultado_vc = new operation_result_vc;
+  operation_result* resultado_L1 = new operation_result;
+  int* miss = new int;
+  int* hits = new int;
+  int* vc_hits = new int;
+  int* dirty = new int;
+  int* index = new int;
+  int* tag_r = new int;
+  // reading or writing
+
+  comun_vc_L1(tag_A,idx_A,idex_size,associativity,loadstore,vc,cache[indx_random],resultado_vc,resultado_L1,miss,hits,vc_hits,dirty);
+/*
+ * 1. Check operation result is a MISS
+ * 2. Check LRU data in L1 line is now in the victim cache.
+ * 3. Check LRU data in VC is discarded
+ * 4. Check replacement policy values in L1 were updated properly.
+ * 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+  
+  // 1. Check operation result is a HIT
+  if (loadstore) // store
+  {
+    EXPECT_EQ(resultado_L1->miss_hit, MISS_STORE);  //revisa que fuera un miss store en L1
+  }
+  else
+  {
+    EXPECT_EQ(resultado_L1->miss_hit, MISS_LOAD); //revisa que fuera un miss load en L1
+  }
+  
+  EXPECT_EQ(resultado_vc->miss_hit, MISS); //revisa que fuera un miss en VC
+
+  
+  // 2. Check LRU data in L1 line is now in the victim cache. 
+
+  // AQUIIIIIIIIIIII
+  EXPECT_EQ(vc[0].tag, Bloque_a_salir_de_L1); //Revisa que el bloque de la cache L1 ingresara al VC
+  
+ // * 3. Check LRU data in VC is discarded
+  for (int i = 0; i < 16; i++)
+  {
+    EXPECT_NE(vc[i].tag,Bloque_a_salir_de_VC); 
+  }
+  
+ // * 4. Check replacement policy values in L1 were updated properly.
+  for (int i = 0; i < associativity; i++)
+  {
+    if (i == associativity - 1)
+    {
+      EXPECT_EQ(cache[indx_random][i].rp_value,0);
+      EXPECT_EQ(cache[indx_random][i].tag,tag_A);
+    }
+    else
+    {
+      EXPECT_EQ(cache[indx_random][i].rp_value,i+1);
+    }
+  }
+  
+
+ // * 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+  for (int i = 0; i < associativity -1 ; i++)
+  {
+    if (cache[indx_random][i].tag == tag_A)
+    {
+      if (loadstore) //store
+      {
+        EXPECT_EQ(cache[indx_random][i].dirty, true); // Revisa que si fue un store, bit da valido 1 en la cache
+      }
+      else          // load
+      {
+        EXPECT_EQ(cache[indx_random][i].dirty, false); // Revisa que si fue un load, bit da valido random_dirty en la cache
+      }
+    }
+  }
+  
+  // eliminando memoria dinamica
+  delete miss, hits, vc_hits, dirty, resultado_L1, resultado_vc,index,tag_r;
+  for(int i = 0; i < associativity; i++)
+  {
+    delete[] cache[i];
+  }
+  delete[] cache; 
 
 }
 

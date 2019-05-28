@@ -68,16 +68,20 @@ int main(int argc, char * argv []) {
   int * index_size = new int;     //tamano del index
   int * index_sizeL2 = new int;     //tamano del index
   int * offset_size = new int;    //tamano del offset
+  int * misses = new int;                   // miss opt VC
+  int * hits = new int;                     // hits opt VC
+  int * VC_hits = new int;                  // VC_hits opt VC
+  int * dirty_evictions = new int;          // dirty_evictions opt VC
 
   // Verificando los tamanos de tag index y offset
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
   
   statusL2 = field_size_get(sizeCacheKB*4,associativity*2,sizeBloqBytes,tag_sizeL2,index_sizeL2,offset_size);
-  
+  /*
   cout << "Tag L1 "<< *tag_size<< endl;
   cout << "Tag L2 "<< *tag_sizeL2<< endl;
   cout << "Index L1 "<< *index_size<< endl;
-  cout << "Index L2 "<< *index_sizeL2<< endl;
+  cout << "Index L2 "<< *index_sizeL2<< endl;*/
   if(status == ERROR || statusL2 == ERROR)
   { 
     cout << "\nSe presento un error en la funcion field_size_get()" << endl;
@@ -98,6 +102,10 @@ int main(int argc, char * argv []) {
   entry ** cacheL2 = creando_matriz_cache(*index_sizeL2,associativity*2,cantidad_sets); 
                                                     // Associativity *2 porque tiene el doble de vías
 
+  ////----------------- creando el victim cache -----------------------------------------
+  entry * vc;
+  vc = creando_victim_cache();
+
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
 
   bool LS; 
@@ -107,6 +115,8 @@ int main(int argc, char * argv []) {
   int *tag = new int;
   int *index = new int;
   struct operation_result result = {};
+  operation_result_vc* resultado_VC = new operation_result_vc;
+  operation_result* resultado_L1_en_VC = new operation_result;
   // ------------------------------- Si se elige la optimizacion de L2 ------------------------------
   
   int *tagL2 = new int;
@@ -160,15 +170,35 @@ int main(int argc, char * argv []) {
             status = lru_L1_L2_replacement_policy(*index, *tag,*indexL2,*tagL2, associativity, LS, cache[*index],cacheL2[*indexL2],&resultL1L2,0);
             if(status == ERROR){  cout << "Se presento un error en la funcion lru_L1_L2_replacement_policy\n" << endl; return 0;  }
           }
+          else if(opt == 0){
+            comun_vc_L1(*tag,*index,*index_size,associativity,LS,vc,cache[*index],resultado_VC,resultado_L1_en_VC,misses,hits,VC_hits,dirty_evictions);
+          } 
 
     // -----------------Se procesan los resultados de result ----------------------      
       
       miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
       if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
     }
-      
   }
 
+  switch (opt)
+  {
+  case NONE:
+    simulation_out(sizeCacheKB,associativity,sizeBloqBytes,miss_hit_counter[0]+miss_hit_counter[1],miss_hit_counter[2]+miss_hit_counter[3],dirty_eviction_counter,*VC_hits,opt);
+    break;
+
+  case L2:
+    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
+    break;
+
+  case VC:
+    simulation_out(sizeCacheKB,associativity,sizeBloqBytes,*misses,*hits,*dirty_evictions,*VC_hits,opt);
+    break;
+
+  default:
+    cout << "error" << endl;
+    break;
+  }
 
   // -----------------Se analizan los resultados finales  ---------------------- 
 
@@ -182,7 +212,7 @@ int main(int argc, char * argv []) {
 
   //simulation_out(sizeCacheKB,associativity,sizeBloqBytes,opt,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
     
-    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
+    
 
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
@@ -196,7 +226,7 @@ int main(int argc, char * argv []) {
   delete [] cache_matrix;
 
   // Liberando memoria de las demas variables
-  delete tag_size, index_size, offset_size, cantidad_sets, tag, index;
+  delete tag_size, index_size, offset_size, cantidad_sets, tag, index, vc, resultado_L1_en_VC ,resultado_VC, misses, hits, VC_hits, dirty_evictions;
 
    //--------------------- Termina el conteo de tiempo y se calcula el tiempo de ejecucion---------------------
 

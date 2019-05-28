@@ -463,7 +463,58 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Dirty evictions (L2):"<<"           " << L2->dirty_eviction  << "\n";
             cout << "------------------------------------------\n";
    }                    
+void simulation_out( int cache_size_kb, 
+                     int associativity, 
+                     int block_size,  
+                     int misses, 
+                     int hits,
+                     int dirty_evictions,
+                     int victim_cache_hits,
+                     int opt)
+  {
+      double miss_rate = (double)misses/double(misses + hits);
 
+      switch (opt)
+      {
+               // Estadisticas para la Cache L1 simple
+      case NONE:
+            cout << "------------------------------------------\n";
+            cout << "  Cache parameters:\n";
+            cout << "------------------------------------------\n";
+            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
+            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
+            cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
+            cout << "------------------------------------------\n";
+            cout << "  Simulation results:\n";
+            cout << "------------------------------------------\n";
+            cout << "  Miss rate (L1):"<<"            " << miss_rate <<"\n";
+            cout << "  Misses (L1):"<<"               " << misses << "\n";
+            cout << "  Hits (L1):"<<"                 " << hits << "\n";
+            cout << "  Dirty evictions:"<<"           " << dirty_evictions << "\n";
+            cout << "------------------------------------------\n";
+         break;
+      
+               // Estadisticas para la optimizacion de Victim Cache
+      case VC:
+            cout << "------------------------------------------\n";
+            cout << "  Cache parameters:\n";
+            cout << "------------------------------------------\n";
+            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
+            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
+            cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
+            cout << "------------------------------------------\n";
+            cout << "  Simulation results:\n";
+            cout << "------------------------------------------\n";
+            cout << "  Miss rate (L1+VC):"<<"            " << miss_rate <<"\n";
+            cout << "  Misses (L1+VC):"<<"               " << misses << "\n";
+            cout << "  Hits (L1+VC):"<<"                 " << hits << "\n";
+            cout << "  Victim cache hits:"<<"                " << victim_cache_hits << "\n";
+            cout << "  Dirty evictions:"<<"           " << dirty_evictions << "\n";
+            cout << "------------------------------------------\n";
+         break;
+      }   
+    
+  }
 
 /*void simulation_out( int cache_size_kb, 
                      int associativity, 
