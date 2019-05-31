@@ -432,95 +432,8 @@ void simulation_out( int cache_size_kb,
     
   }
 
-/*void simulation_out( int cache_size_kb, 
-                     int associativity, 
-                     int block_size, 
-                     int CPU_time, 
-                     int AMAT, 
-                     int opt,
-                     double miss_rate, 
-                     double Read_miss_rate, 
-                     int Dirty, 
-                     int Load_miss,
-                     int Store_miss,
-                     int Load_hit,
-                     int Store_hit
-                       )
-  {
-      switch (opt)
-      {
-               // Estadisticas para la Cache L1 simple
-      case NONE:
-            cout << "------------------------------------------\n";
-            cout << "  Cache parameters:\n";
-            cout << "------------------------------------------\n";
-            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
-            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
-            cout << "  Cache Block Size (bytes):"<<"  " << block_size << "\n";
-            cout << "------------------------------------------\n";
-            cout << "  Simulation results:\n";
-            cout << "------------------------------------------\n";
-            cout << "  Miss rate (L1):"<<"            " << Read_miss_rate <<"\n";
-            cout << "  Misses (L1):"<<"               " << Load_miss << "\n";
-            cout << "  Hits (L1):"<<"                 " << Load_hit << "\n";
-            cout << "  Dirty evictions:"<<"           " << Dirty << "\n";
-            cout << "------------------------------------------\n";
-         break;
-      
-               // Estadisticas para la optimizacion de Victim Cache
-      case VC:
-            cout << "------------------------------------------\n";
-            cout << "  Cache parameters:\n";
-            cout << "------------------------------------------\n";
-            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
-            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
-            cout << "  Cache Block Size (bytes):"<<"  " << block_size << "\n";
-            cout << "------------------------------------------\n";
-            cout << "  Simulation results:\n";
-            cout << "------------------------------------------\n";
-            cout << "  Miss rate (L1+VC):"<<"            " << Read_miss_rate <<"\n";
-            cout << "  Misses (L1+VC):"<<"               " << Load_miss << "\n";
-            cout << "  Hits (L1+VC):"<<"                 " << Load_hit << "\n";
-            cout << "  Victim cache hits:"<<"                " << Store_hit << "\n";
-            cout << "  Dirty evictions:"<<"           " << Dirty << "\n";
-            cout << "------------------------------------------\n";
-         break;
-
-               // Estadisticas para la optimizacion de L2 Cache
-      case L2:
-            cout << "------------------------------------------\n";
-            cout << "  Cache parameters:\n";
-            cout << "------------------------------------------\n";
-            cout << "  L1 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
-            cout << "  L2 Cache Size (KB): "<<"          " << cache_size_kb << "\n";
-            cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
-            cout << "  Cache L2 Associativity: "<<"      " << associativity << "\n";
-            cout << "  Cache Block Size (bytes):"<<"  " << block_size << "\n";
-            cout << "------------------------------------------\n";
-            cout << "  Simulation results:\n";
-            cout << "------------------------------------------\n";
-            cout << "  Overall miss rate"<<"         " << miss_rate <<"\n";
-            cout << "  L1 miss rate:"<<"            " << Read_miss_rate <<"\n";
-            cout << "  L2 miss rate:"<<"            " << Read_miss_rate <<"\n";
-            cout << "  Global miss rate:"<<"            " << Read_miss_rate <<"\n";
-            cout << "  Misses (L1):"<<"               " << Load_miss << "\n";
-            cout << "  Hits (L1):"<<"                 " << Load_hit << "\n";
-            cout << "  Misses (L2):"<<"               " << Load_miss << "\n";
-            cout << "  Hits (L2):"<<"                 " << Load_hit << "\n";
-            cout << "  Dirty evictions (L2):"<<"           " << Dirty << "\n";
-            cout << "------------------------------------------\n";
-         break;
-      }   
-    
-  }*/
-
-
-
-
 /*
- * TESTEADA PERO TIENE ALGO EXTRANO YA QUE NO ME 
- * DA SEG FAULT SI ME METO EN DIR DE MEMORIA NO
- * PERMITIDAS, POR LO DEMAS TODO BIEN
+ * TESTEADA 
  */
 entry* creando_victim_cache()
 {
@@ -551,9 +464,6 @@ int joining_tag_index(   int idx_size,
 }
 
 // TESTEADA
-// si hay un miss en cache y no salio bloque, ni si quiera busque en el victim xq no va a estar, 
-// por lo que es victim miss y no usar ninguna funcion
-// si no sale bloque de la cache, directo es miss de VC sin hacer nada al mismo
 int vc_searching ( int tag,
                    int idx,
                    int idx_size,
