@@ -744,25 +744,12 @@ TEST(L2,hit){
       EXPECT_EQ(cacheL2[m].dirty, 1); // Revisa que el valor de reemplazo del dato que hizo hit sea 0
     }
   }  
-
-
-
-   // eliminando memoria dinamica
-  delete &resultL1L2;
-  for(int i = 0; i < associativityL1; i++)
-  {
-    delete[] &cacheL1[i];
-  }
-  delete[] cacheL1; 
+ 
   
 }
   
   
  
-
-
-
-
 
 
 /* 
