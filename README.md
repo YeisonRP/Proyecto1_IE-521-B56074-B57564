@@ -1,4 +1,4 @@
-# Proyecto I IE521 Simulador de Caché - Yeison Rodriguez B56074 - Pablo Vargas B57564
+# Proyecto II IE521 Simulador de Caché con optimizaciones - Yeison Rodriguez B56074 - Pablo Vargas B57564
 
 Este proyecto consiste en un simulador de memoria caché L1 con Victim caché y 
 una L1 con una L2. Las direcciones son de 32 bits y todo se encuentra parametrizado
