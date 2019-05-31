@@ -570,6 +570,9 @@ TEST(L2, miss_hit){
 
   for (int i =  0; i < associativityL2; i++) {
 
+      do{randomTagL2 = rand()%4096; }
+      while(randomTagL2 == adress_AL2);
+      
       cacheL2[i].valid = true;
       cacheL2[i].tag = randomTagL2;                               // Llenando L2
       cacheL2[i].dirty = 0;
@@ -609,7 +612,7 @@ TEST(L2, miss_hit){
   
  // 4. Check replacement policy values in L1/L2 were updated properly.
 
-   for (int i = 0; i < associativityL1 -1 ; i++)
+   for (int i = 0; i < associativityL1; i++)
   {
     if (cacheL1[i].tag == adress_AL1)
     {
@@ -617,7 +620,7 @@ TEST(L2, miss_hit){
     }
   }   
 
-    for (int i = 0; i < associativityL2 -1 ; i++)
+    for (int i = 0; i < associativityL2; i++)
   {
     if (cacheL2[i].tag == adress_AL2)
     {
@@ -627,7 +630,7 @@ TEST(L2, miss_hit){
 
   // 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
  
-    for (int i = 0; i < associativityL2 -1 ; i++)
+    for (int i = 0; i < associativityL2; i++)
   {
     if (cacheL2[i].tag == adress_AL2 && LS)
     {
@@ -685,6 +688,9 @@ TEST(L2,hit){
   
 
   for (int i =  0; i < associativityL2; i++) {
+
+      do{randomTagL2 = rand()%4096; }
+      while(randomTagL2 == adress_AL2);
 
       cacheL2[i].valid = true;
       cacheL2[i].tag = randomTagL2;                               // Llenando L2
