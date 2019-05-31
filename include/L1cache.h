@@ -67,7 +67,8 @@ struct operation_result_L2 {
  int MissL2;
  int HitL2;
  int dirty_eviction;
- int  evicted_address;
+ int  evicted_addressL1;
+ int  evicted_addressL2;
 };
 //////////////////////////////////////////////////
 
