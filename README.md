@@ -1,11 +1,12 @@
-# Proyecto I IE521 Simulador de Caché - Yeison Rodriguez B56074 - Pablo Vargas B57564
+# Proyecto II IE521 Simulador de Caché con optimizaciones - Yeison Rodriguez B56074 - Pablo Vargas B57564
 
-Este proyecto consiste en un simulador de memoria caché tipo Write Back - Write Allocate
-en arquitectura de 32 bits
+Este proyecto consiste en un simulador de memoria caché L1 con Victim caché y 
+una L1 con una L2. Las direcciones son de 32 bits y todo se encuentra parametrizado
+por lo que el usuario decide los valores de la caché
 
-Esta caché permite utilizar dos políticas de remplazo, SSRIP y LRU
+Esta caché solo utiliza política de remplazo LRU
 
-Esta memoria caché usa el framework gtest para los test, más adelante se indicará la 
+Para las pruebas se usa el framework gtest para los test, más adelante se indicará la 
 manera de ejecutarlos.
 
 ## Formato de los datos de entrada de la cache
@@ -48,18 +49,18 @@ Diríjase a la carpeta build y ejecute make cachetest, existen muchas maneras de
 2. Correr solo un test:
 ```
   ./test/cachetest  --gtest_filter=<test_name>
-  Ex: ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip
+  Ex: ./test/cachetest  --gtest_filter=VC.miss_hit
 ```
 3. Correr un test n veces:
 ```
 ./test/cachetest  --gtest_filter=<test_name> --gtest_repeat=<n>
-Ex: ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip --gtest_repeat=2
+Ex: ./test/cachetest  --gtest_filter=VC.miss_hit --gtest_repeat=2
 ```
 4. Replicar resultados de un test en específco:
 ```
   Each test is run with base seed, to replicate the result the same seed must be used
   ./test/cachetest  --gtest_filter=<test_name> --gtest_random_seed=<test_seed>
-  ./test/cachetest  --gtest_filter=L1cache.hit_miss_srrip --gtest_random_seed=2126
+  ./test/cachetest  --gtest_filter=VC.miss_hit --gtest_random_seed=2126
 ```  
 Para habilitar el debug se debe poner esta variable en alto, es posible hacerlo desde la
 terminal de la siguiente forma:
@@ -71,7 +72,7 @@ Si se quiere deshabilitar el debug, ponga la variable en 0
 ## Guía para ejecutar las simulaciones de la caché
 Para ejecutar el programa diríjase al directorio build/src,
 ```
-gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -rp <replacement policy>
+gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -opt <optimization>
 ```
 Donde:
 trace: Son los datos que entran a la caché, en el siguiente enlace se dejan trace válidos:
@@ -89,7 +90,7 @@ replacement policy: Políica de remplazo utilizada, únicos valores válidos son
 
 A continuación se deja un ejemplo de una simulación válida:
 ```
-gunzip -c mcf.trace.gz | ./l1cache -t 64 -a 4 -l 8 -rp srrip
+gunzip -c mcf.trace.gz | ./l1cache -t 32 -a 1 -l 32 -opt L2
 ```
 
 ### Dependencias
