@@ -16,683 +16,6 @@ int debug_on = 0;
 using namespace std;
 /* Test Helpers */
 #define DEBUG(x) if (debug_on) printf("%s\n",#x)
-/*
- * TEST1: Verifies miss and hit scenarios for srrip policy
- * 1. Choose a random associativity
- * 2. Fill a cache entry
- * 3. Force a miss load
- * 4. Check  miss_hit_status == MISS_LOAD
- * 5. Force a miss store
- * 6. Check miss_hit_status == MISS_STORE
- * 7. Force a hit read
- * 8. Check miss_hit_status == HIT_READ
- * 9. Force a hit store
- * 10. miss_hit_status == HIT_STORE
- */
-TEST(L1cache, hit_miss_srrip){
-  int status;
-  int i;
-  int idx;
-  int tag;
-  int associativity;
-  enum miss_hit_status expected_miss_hit;
-  bool loadstore = 1;
-  bool debug = 0;
-  struct operation_result result = {};
-
-  /* Fill a random cache entry */
-  idx = rand()%1024;
-  tag = rand()%4096;
-  associativity = 1 << (rand()%4);
-  if (debug_on) {
-    printf("Entry Info\n idx: %d\n tag: %d\n associativity: %d\n",
-          idx,
-          tag,
-          associativity);
-  }
- 
-  struct entry cache_line[associativity];
-  /* Check for a miss */
-  DEBUG(Checking miss operation);
-  for (i = 0 ; i < 2; i++){
-    /* Fill cache line */
-    for ( i =  0; i < associativity; i++) {
-      cache_line[i].valid = true;
-      cache_line[i].tag = rand()%4096;
-      cache_line[i].dirty = 0;
-      cache_line[i].rp_value = (associativity <= 2)? rand()%associativity: 3;
-      while (cache_line[i].tag == tag) {
-        cache_line[i].tag = rand()%4096;
-      }
-    }
-    loadstore = (bool)i; // en 0 es un Load, en 1 un store
-    status = srrip_replacement_policy(idx, 
-                                     tag, 
-                                     associativity,
-                                     loadstore,
-                                     cache_line,
-                                     &result,
-                                     bool(debug_on));
-    EXPECT_EQ(status, 0);
-    EXPECT_EQ(result.dirty_eviction, 0);
-    expected_miss_hit = loadstore ? MISS_STORE: MISS_LOAD;
-    EXPECT_EQ(result.miss_hit, expected_miss_hit);
-  }
-  /*
-   * Check for hit: block was replaced in last iteration, if we used the same 
-   * tag now we will get a hit
-   */
-  DEBUG(Checking hit operation);
-  for (i = 0 ; i < 2; i++){
-    loadstore = (bool)i;
-    status = srrip_replacement_policy(idx, 
-                                     tag, 
-                                     associativity,
-                                     loadstore,
-                                     cache_line,
-                                     &result,
-                                     (bool)debug_on);
-    EXPECT_EQ(status, 0);
-    EXPECT_EQ(result.dirty_eviction, 0);
-    expected_miss_hit = loadstore ? HIT_STORE: HIT_LOAD;
-    EXPECT_EQ(result.miss_hit, expected_miss_hit);
-  }
-
-}
-
-/*
- * TEST2: Verifies miss and hit scenarios for lru policy
- * 1. Choose a random associativity
- * 2. Fill a cache entry
- * 3. Force a miss load
- * 4. Check  miss_hit_status == MISS_LOAD
- * 5. Force a miss store
- * 6. Check miss_hit_status == MISS_STORE
- * 7. Force a hit read
- * 8. Check miss_hit_status == HIT_READ
- * 9. Force a hit store
- * 10. miss_hit_status == HIT_STORE
- */
-TEST(L1cache, hit_miss_lru) {
-  int status;
-  int i;
-  int idx;
-  int tag;
-  int associativity;
-  enum miss_hit_status expected_miss_hit;
-  bool loadstore = 1;
-  bool debug = 0;
-  struct operation_result result = {};
-
-
-  idx = rand()%1024;
-  tag = rand()%4096;
-
-  /////////////////////      1. Choose a random associativity      ///////////////////
-
-  associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 , 16
-  if (debug_on) {
-    printf("Entry Info\n idx: %d\n tag: %d\n associativity: %d\n",
-          idx,
-          tag,
-          associativity);
-  }
-
-  struct entry cache_line[associativity];
-
-  DEBUG(Checking miss operation);
-
-  //iteracion 1 del for: 
-  /////////////////////      2. Fill a cache entry      ///////////////////
-  /////////////////////      3. Force a miss load      ///////////////////
-  /////////////////////      4. Check  miss_hit_status == MISS_LOAD     ///////////////////
-
-  // iteracion 2 del for:
-  /////////////////////      2. Fill a cache entry      ///////////////////
-  /////////////////////      5. Force a miss store     ///////////////////
-  /////////////////////      6. Check miss_hit_status == MISS_STORE     ///////////////////
-
-  for (i = 0 ; i < 2; i++){
-    /* Fill cache line */
-    for ( i =  0; i < associativity; i++) {
-      cache_line[i].valid = true;
-      cache_line[i].tag = rand()%4096;
-      cache_line[i].dirty = 0;
-      cache_line[i].rp_value = i;
-      while (cache_line[i].tag == tag) {  // hace que los tag de la cache nunca coincidan con el tag brindado
-        cache_line[i].tag = rand()%4096;
-      }
-    }
-    loadstore = (bool)i; // en 0 es un Load, en 1 un store
-    status = lru_replacement_policy( idx, 
-                                     tag, 
-                                     associativity,
-                                     loadstore,
-                                     cache_line,
-                                     &result,
-                                     bool(debug_on));
-
-    EXPECT_EQ(status, 0);                                   
-    EXPECT_EQ(result.dirty_eviction, 0);                    
-    expected_miss_hit = loadstore ? MISS_STORE: MISS_LOAD;  
-    EXPECT_EQ(result.miss_hit, expected_miss_hit);          
-  }
-
-
-  //iteracion 1 del for: 
-  /////////////////////      7. Force a hit read      ///////////////////
-  /////////////////////      8. Check miss_hit_status == HIT_READ      ///////////////////
-
-  // iteracion 2 del for:
-  /////////////////////      9. Force a hit store     ///////////////////
-  /////////////////////      10. miss_hit_status == HIT_STORE      ///////////////////
-
-  DEBUG(Checking hit operation);
-  for (i = 0 ; i < 2; i++){
-    loadstore = (bool)i;  // en 0 es un Load, en 1 un store
-    status = lru_replacement_policy(idx, 
-                                     tag, 
-                                     associativity,
-                                     loadstore,
-                                     cache_line,
-                                     &result,
-                                     (bool)debug_on);
-    EXPECT_EQ(status, 0);
-    EXPECT_EQ(result.dirty_eviction, 0);
-    expected_miss_hit = loadstore ? HIT_STORE: HIT_LOAD;
-    EXPECT_EQ(result.miss_hit, expected_miss_hit);
-  }
-}
-
-/*
- * TEST3: Verifies replacement policy promotion and eviction
- * 1. Choose a random policy 
- * 2. Choose a random associativity
- * 3. Fill a cache entry
- * 4. Insert a new block A
- * 5. Force a hit on A
- * 6. Check rp_value of block A
- * 7. Keep inserting new blocks until A is evicted
- * 8. Check eviction of block A happen after N new blocks were inserted
- * (where N depends of the number of ways)
- */
-TEST(L1cache, promotion){
-  int status;
-  int i;
-  int associativity;
-  int tag;
-  int idx;
-  int policy;
-  enum miss_hit_status expected_miss_hit;
-  bool loadstore = 0; //solo loads
-  bool debug = 0;
-  bool tag_A_evicted = false;
-  bool politica = 0;
-  struct operation_result result = {};
-
-    // Choose a random policy
-      policy = rand()%2;      // Escoge un valor aleatorio entre 0 y 1.
-
-    // Choose a random associativity
-      associativity = 1 << (rand()%4);  // Puede ser 1, 2, 4, 8, 16.
-
-    if (debug_on) {
-    printf("Entry Info\n associativity: %d\n  Politica Remplazo (0 LRU, 1 SRRIP): %d\n",
-          associativity,
-          policy); } 
-
-    // Fill a cache entry
-      struct entry cache_line[associativity];
-      idx = rand()%1024;
-
-      for(i=0; i<associativity; i++)
-      {
-        cache_line[i].valid = false;
-        cache_line[i].tag = 0;
-        cache_line[i].dirty = false;
-        cache_line[i].rp_value = (associativity-1);
-      } 
-
-    // Insert a new block A
-    // Force a hit on block A
-      int Block_A = 1196;  // Se elige un valor menor a 4096.
-
-      for(i = 0; i<2; i++){
-        if(politica){ // SRRIP
-        status = srrip_replacement_policy(idx, 
-                                        Block_A, 
-                                        associativity,
-                                        loadstore,
-                                        cache_line,
-                                        &result,
-                                        bool(debug_on));
-        }
-        else{         //LRU 
-        status = lru_replacement_policy( idx, 
-                                        Block_A,  
-                                        associativity,
-                                        loadstore,
-                                        cache_line,
-                                        &result,
-                                        bool(debug_on));
-        }
-        
-        // Check rp_value of block A
-        EXPECT_EQ(cache_line[0].rp_value, 0); // En la posición 0 porque ahí se va a dar el hit.
-        
-        // Keep inserting new blocks until A is evicted
-
-        for(i=0; i < associativity; i++) // Insertará N valores nuevos, donde N = associativity
-        {
-          tag = rand()%4096; // Escoge un valor random para tag
-          while(tag == Block_A){tag=rand()%4096;} // Se asegura de que sea diferente a Block_A
-          if(politica){ // SRRIP
-          status = srrip_replacement_policy(idx, 
-                                          tag, 
-                                          associativity,
-                                          loadstore,
-                                          cache_line,
-                                          &result,
-                                          bool(debug_on));
-          }
-          else{         //LRU 
-          status = lru_replacement_policy( idx, 
-                                          tag,  
-                                          associativity,
-                                          loadstore,
-                                          cache_line,
-                                          &result,
-                                          bool(debug_on));
-          }
-
-          // Si el bloque expulsado es el A
-          if(result.evicted_address == Block_A && !tag_A_evicted) 
-            {
-              tag_A_evicted = true;
-            //  EXPECT_EQ(tag_A_evicted, true);
-              EXPECT_EQ(i,associativity-1);
-            }
-        }
-
-
-        
-    }
-
-}
-
-
-
-/*
- * TEST4: Verifies evicted lines have the dirty bit set accordantly to the operations
- * performed.
- * 1. Choose a random policy
- * 2. Choose a random associativity
- * 3. Fill a cache entry with only read operations
- * 4. Force a write hit for a random block A
- * 5. Force a read hit for a random block B
- * 6. Force read hit for random block A
- * 7. Insert lines until B is evicted
- * 8. Check dirty_bit for block B is false
- * 9. Insert lines until A is evicted
- * 10. Check dirty bit for block A is true
- */
-TEST(L1cache, writeback){
-  int status;
-  int i;
-  int associativity;
-  enum miss_hit_status expected_miss_hit;
-  bool loadstore = 0; //solo loads
-  bool debug = 0;
-  bool politica = 0;
-  struct operation_result result = {};
-
-
-
-/////////////////////      1. Choose a random policy      ///////////////////
-  politica = rand()%2;    //numero random de 0 a 1
-  
-/////////////////////      2. Choose a random associativity      ///////////////////
-  associativity = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
-
-  struct entry cache_line[2][associativity];  //----Primer bloque A, segundo B----
-
-  DEBUG(Asociatividad y politica de remplazo);
-  if (debug_on) {
-    printf("Entry Info\n associativity: %d\n  Politica Remplazo (0 LRU, 1 SRRIP): %d\n",
-          associativity,
-          politica);
-  }
-
-  /* ----Inicializar los set del cache en valores por defecto ------*/
-  for(int i = 0; i < 2; i++)
-  {
-    for (int j =  0; j < associativity; j++) {
-      cache_line[i][j].valid = false;
-      cache_line[i][j].tag = 0;
-      cache_line[i][j].dirty = 0;
-      cache_line[i][j].rp_value = associativity-1;
-    }  
-  }
-  
-
-
-/////////////////////      3. Fill a cache entry with only read operations:      ///////////////////
-  int idx = rand()%1024;
-  int tag[associativity]; 
-  tag[0] = rand()%4096;     
-  loadstore = 0; // en 0 es un Load/read, en 1 un store/write
-  for(int j = 0; j < 2; j++)
-  {
-    for(int i = 0; i < associativity; i++)
-    {
-      tag[i] = tag[0] + i; // -----Para que todos los tag ingresados sean diferentes-----,
-      if(politica){ // SRRIP
-      status = srrip_replacement_policy(idx, 
-                                      tag[i], 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[j],
-                                      &result,
-                                      bool(debug_on));
-      }
-      else{         //LRU 
-      status = lru_replacement_policy( idx, 
-                                      tag[i], 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[j],
-                                      &result,
-                                      bool(debug_on));
-      }
-      expected_miss_hit = MISS_LOAD;
-      EXPECT_EQ(status, 0);
-      EXPECT_EQ(result.miss_hit, expected_miss_hit);   // Se espera que todos sean miss de read   
-    }
-  }
-  
-
-//Iteracion 1  
-/////////////////////      4. Force a write hit for a random block A     ///////////////////
-
-//Iteracion 2  
-/////////////////////      5. Force a read hit for a random block B     ///////////////////  
-
-  loadstore = 1; //---- en 0 es un Load/read, en 1 un store/write----
-  int random_A_B;
-  random_A_B = rand()%associativity; //----Calculando Bloque A y B-----
-
-
-  for(int j = 0; j < 2; j++)
-  {
-    
-    loadstore = false;
-    if(j == 0){ loadstore = true;  }  //-------store/write--------
-
-    if(politica){ // SRRIP
-    status = srrip_replacement_policy(idx, 
-                                    tag[random_A_B], 
-                                    associativity,
-                                    loadstore,
-                                    cache_line[j],
-                                    &result,
-                                    bool(debug_on));
-    }
-    else{         //LRU 
-    status = lru_replacement_policy( idx, 
-                                    tag[random_A_B], 
-                                    associativity,
-                                    loadstore,
-                                    cache_line[j],
-                                    &result,
-                                    bool(debug_on));
-    }
-    if(j == 0)
-    {
-      expected_miss_hit = HIT_STORE;
-      EXPECT_EQ(status, 0);
-      EXPECT_EQ(result.miss_hit, expected_miss_hit); 
-      EXPECT_EQ(cache_line[j][random_A_B].dirty, 1);///////////asd
-    }
-    if(j == 1)
-    {
-      expected_miss_hit = HIT_LOAD;
-      EXPECT_EQ(status, 0);
-      EXPECT_EQ(result.miss_hit, expected_miss_hit);     
-    }
-  }
-  
-/////////////////////      6. Force read hit for random block A     ///////////////////
-
-
-  loadstore = 0; // ---en 0 es un Load/read, en 1 un store/write---
-  
-  if(politica){ // SRRIP
-  status = srrip_replacement_policy(idx, 
-                                  tag[random_A_B ], 
-                                  associativity,
-                                  loadstore,
-                                  cache_line[0],
-                                  &result,
-                                  bool(debug_on));
-  }
-  else{         //LRU 
-  status = lru_replacement_policy( idx, 
-                                  tag[random_A_B], 
-                                  associativity,
-                                  loadstore,
-                                  cache_line[0],
-                                  &result,
-                                  bool(debug_on));
-  }
-  expected_miss_hit = HIT_LOAD;
-  EXPECT_EQ(status, 0);
-  EXPECT_EQ(result.miss_hit, expected_miss_hit);  
-
-/////////////////////      7. Insert lines until B is evicted     ///////////////////
-
-/////////////////////      8. Check dirty_bit for block B is false     ///////////////////
-
-
-
-
-
-  int tag_random;
-  bool tag_B_evicted = false; //Para saber si ya se saco el tag B
-   
-  while(!tag_B_evicted){
-      // ---------------Encontrando un tag que no se encuentre en la cache---------------
-     
-      for(int i = 1; i <= associativity; i++)
-      {           
-        if(i == 1){ tag_random = rand()%4096; } // ----Definiendo el tag random---   
-        if(tag_random == tag[i-1]){  i = 0;  }    // ----si el tag random ya es uno que esta, se comienza de nuevo el for---
-      }    
-      // insert lines
-      loadstore = 0;
-      if(politica){ // SRRIP
-      status = srrip_replacement_policy(idx, 
-                                      tag_random, 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[1],
-                                      &result,
-                                      bool(debug_on));
-      }
-      else{         //LRU 
-      status = lru_replacement_policy( idx, 
-                                      tag_random, 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[1],
-                                      &result,
-                                      bool(debug_on));
-      }
-
-      // -------------Si el bloque expulsado es el B----------------
-      if(result.evicted_address == tag[random_A_B] && !tag_B_evicted)
-      {
-        tag_B_evicted = true;
-        EXPECT_EQ(result.dirty_eviction, false);
-      }     
-  }
-
-
-/////////////////////      9. Insert lines until A is evicted     ///////////////////
-
-/////////////////////      10. Check dirty bit for block A is true     ///////////////////
-  
-
-
-  bool tag_A_evicted = false; //Para saber si ya se saco el tag A
-        
-  while(!tag_A_evicted){
-      // -------------Encontrando un tag que no se encuentre en la cache----------------
-      
-      for(int i = 1; i <= associativity; i++)
-      {
-
-        if(i == 1){ tag_random = rand()%4096; } // ----Definiendo el tag random---   
-        if(tag_random == tag[i-1]){  i = 0; }    // si el tag random ya es uno que esta, se comienza de nuevo el for
-      }    
-      // ----------------insert lines---------------
-      loadstore = 0;
-      if(politica){ // SRRIP
-      status = srrip_replacement_policy(idx, 
-                                      tag_random, 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[0],
-                                      &result,
-                                      bool(debug_on));
-      }
-      else{         //LRU 
-      status = lru_replacement_policy( idx, 
-                                      tag_random, 
-                                      associativity,
-                                      loadstore,
-                                      cache_line[0],
-                                      &result,
-                                      bool(debug_on));
-      }
-
-      // ------------Si el bloque expulsado es el A-----------------
-      if(result.evicted_address == tag[random_A_B ] && !tag_A_evicted)
-      {
-        tag_A_evicted = true;
-        EXPECT_EQ(result.dirty_eviction, true);
-      }     
-  }
-
-}
-
-/*
- * TEST5: Verifies an error is return when invalid parameters are pass
- * performed.
- * 1. Choose a random policy 
- * 2. Choose invalid parameters for idx, tag and asociativy
- * 3. Check function returns a PARAM error condition
- */
-TEST(L1cache, boundaries){
-  
-  int status;
-  int idx_invalid;
-  int tag_invalid;
-  int associativity_invalid;
-  int idx;
-  int tag;
-  int associativity;  
-  bool politica;
-  bool loadstore = 0;
-  struct operation_result result = {};
-  // Valores validos
-  idx = rand()%1024;
-  tag = rand()%4096;
-  associativity = 1 << (rand()%4); 
-
-/////////////////////      1. Choose a random policy      ///////////////////
-  politica = rand()%2;    //numero random de 0 a 1
-
-/////////////////////      2. Choose invalid parameters for idx, tag and asociativy     ///////////////////
-
-  idx_invalid = (rand()%1024) * -1 ;
-  tag_invalid = (rand()%4096) * -1 ;
-  associativity_invalid = 1 << (rand()%4);
-  if(associativity_invalid == 1){ associativity_invalid += 2;}
-  else{associativity_invalid += 1;}
-  
-
-/////////////////////     3. Check function returns a PARAM error condition     ///////////////////
-
-  //C------------------on Tag invalido y demas valores validos----------------------
-    if(politica){ // SRRIP
-    struct entry cache_line[associativity];
-    status = srrip_replacement_policy(idx, 
-                                    tag_invalid, 
-                                    associativity,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    else{         //LRU 
-    struct entry cache_line[associativity];
-    status = lru_replacement_policy( idx, 
-                                    tag_invalid, 
-                                    associativity,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    EXPECT_EQ(status, ERROR);
-
-  //------------------------Con index invalido y demas valores validos-----------------
-    if(politica){ // SRRIP
-    struct entry cache_line[associativity];
-    status = srrip_replacement_policy(idx_invalid, 
-                                    tag, 
-                                    associativity,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    else{         //LRU 
-    struct entry cache_line[associativity];
-    status = lru_replacement_policy( idx_invalid, 
-                                    tag, 
-                                    associativity,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    EXPECT_EQ(status, ERROR);
-
-
-  //---------------Con associativity invalido y demas valores validos-------------------
-    if(politica){ // SRRIP
-    struct entry cache_line[associativity_invalid];
-    status = srrip_replacement_policy(idx, 
-                                    tag, 
-                                    associativity_invalid,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    else{         //LRU 
-    struct entry cache_line[associativity_invalid];
-    status = lru_replacement_policy( idx, 
-                                    tag, 
-                                    associativity_invalid,
-                                    loadstore,
-                                    cache_line,
-                                    &result,
-                                    bool(debug_on));
-    }
-    EXPECT_EQ(status, ERROR);
-}
 
 
 
@@ -1069,6 +392,375 @@ TEST(VC, miss_miss){
   delete[] cache; 
 
 }
+
+
+//-----CACHE_MULTI-NIVEL: L1 miss / L2 miss 
+/*
+* 1. Choose a random associativity
+* 2. Choose a random address (AddressA)
+* 3. Fill a l1 cache line with random addresses, making sure AddressA is not added.
+* 4. Fill a l2 cache line with random addresses, making sure AddressA is not added.
+* 5. Read or Write (choose the operation randomly) AddressA. Check 1,2,3 and 4.
+*/
+
+
+TEST(L2, miss_miss){
+
+  int associativityL1,associativityL2;
+  int adress_AL1, adress_AL2;
+
+/////////////////////      1. Choose a random associativity      ///////////////////
+  associativityL1 = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  associativityL2 = associativityL1 << 1; //Es el doble de la asociatividad de L1
+  
+/////////////////////      2. Choose a random address (AddressA)      ///////////////////
+  adress_AL1 = rand()%4096; // tag random
+  adress_AL2 >> 1;
+  
+  struct entry cacheL1[associativityL1];  // Set de L1
+  struct entry cacheL2[associativityL2];  //Set de L2
+  struct operation_result_L2 resultL1L2 = {};
+
+  int randomTagL1, randomTagL2;
+  int LessUsedTagL1, LessUsedTagL2;          // Almacenan el tag que tiene el valor de remplazo proximo a salir de la cache
+
+/////////////////////     3. Fill a l1 cache line with random addresses, making sure AddressA is not added.     ///////////////////
+  
+  for (int j =  0; j < associativityL1; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      if(j==0){LessUsedTagL1=randomTagL1;}         // Guarda el tag que va a tener valor de reemplazo asociatividad-1
+
+      cacheL1[j].valid = false;
+      cacheL1[j].tag = randomTagL1;                               // Llenando L1
+      cacheL1[j].dirty = 0;
+      cacheL1[j].rp_value = associativityL1-1-j;
+    }  
+
+/////////////////////     4. Fill a l2 cache line with random addresses, making sure AddressA is not added.     ///////////////////
+  
+
+  for (int i =  0; i < associativityL2; i++) {
+
+      do{randomTagL2 = rand()%4096; }
+      while(randomTagL2 == adress_AL2);
+
+      if(i==0){LessUsedTagL1=randomTagL2;}           // Guarda el tag que va a tener valor de reemplazo asociatividad-1
+
+      cacheL2[i].valid = false;
+      cacheL2[i].tag = randomTagL2;                               // Llenando L2
+      cacheL2[i].dirty = 0;
+      cacheL2[i].rp_value = associativityL2-1-i;
+    } 
+
+
+/////////////////////     5. Read or Write (choose the operation randomly) AddressA.     ///////////////////
+   
+    bool LS = rand()%2;                               // Escritura o lectura Random
+
+    lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL2,associativityL1,LS,cacheL1,cacheL2,&resultL1L2,0);  
+       
+
+    /*
+  1. Check operation result in L1 is a miss
+  2. Check operation result in L2 is a miss
+  3. Check LRU data in L1 line is evicted**.
+  4. Check LRU data in L2 line is evicted***.
+  5. Check replacement policy values in L1/L2 were updated properly.
+  6. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+  
+  // 1. Check operation result in L1 is a miss
+    EXPECT_EQ(resultL1L2.MissL1, 1);  //revisa que fuera un miss en L1
+  
+  // 2. Check operation result in L2 is a miss 
+ 
+    EXPECT_EQ(resultL1L2.MissL2,1); //revisa que fuera un miss en L2
+  
+ // 3. Check LRU data in L1 line is evicted**.
+
+    EXPECT_EQ(resultL1L2.evicted_addressL1,LessUsedTagL1); //revisa que sacara al tag con mayor  valor de reemplazo en L1
+  
+  
+ // 4. Check LRU data in L2 line is evicted***.
+  
+    EXPECT_EQ(resultL1L2.evicted_addressL2,LessUsedTagL2); //revisa que sacara al tag con mayor  valor de reemplazo en L2
+
+ // 5. Check replacement policy values in L1/L2 were updated properly.
+  for (int i = 0; i < associativityL1 -1 ; i++)
+  {
+    if (cacheL1[i].tag == adress_AL1)
+    {
+      EXPECT_EQ(cacheL1[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L1
+    }
+  }   
+
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2)
+    {
+      EXPECT_EQ(cacheL2[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L2
+    }
+  }   
+
+  // 6. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ 
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2 && LS == true)
+    {
+      EXPECT_EQ(cacheL2[i].dirty, 1); // Revisa que si fue un store, el dirty este en 1
+    }
+  }  
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//-----CACHE_MULTI-NIVEL: L1 miss / L2 hit 
+/*
+1. Choose a random associativity
+2. Choose a random address (AddressA)
+3. Fill a l1 cache line with random addresses, making sure AddressA is not added.
+4. Fill a l2 cache line with random addresses, making sure AddressA is added.
+5. Read or Write (choose the operation randomly) AddressA.
+*/
+
+TEST(L2, miss_hit){
+
+  int associativityL1,associativityL2;
+  int adress_AL1, adress_AL2;
+
+/////////////////////      1. Choose a random associativity      ///////////////////
+  associativityL1 = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  associativityL2 = associativityL1 << 1; //Es el doble de la asociatividad de L1
+  
+/////////////////////      2. Choose a random address (AddressA)      ///////////////////
+  adress_AL1 = rand()%4096; // tag random
+  adress_AL2 >> 1;
+  
+  struct entry cacheL1[associativityL1];  // Set de L1
+  struct entry cacheL2[associativityL2];  //Set de L2
+  struct operation_result_L2 resultL1L2 = {};
+
+  int randomTagL1, randomTagL2;
+  int LessUsedTagL1;         // Almacenan el tag que tiene el valor de remplazo proximo a salir de la cache
+
+/////////////////////     3. Fill a l1 cache line with random addresses, making sure AddressA is not added.     ///////////////////
+  
+  for (int j =  0; j < associativityL1; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      if(j==0){LessUsedTagL1=randomTagL1;}         // Guarda el tag que va a tener valor de reemplazo asociatividad-1
+
+      cacheL1[j].valid = false;
+      cacheL1[j].tag = randomTagL1;                               // Llenando L1
+      cacheL1[j].dirty = 0;
+      cacheL1[j].rp_value = associativityL1-1-j;
+    }  
+
+/////////////////////     4. Fill a l2 cache line with random addresses, making sure AddressA is added.     ///////////////////
+  
+
+  for (int i =  0; i < associativityL2; i++) {
+
+      cacheL2[i].valid = false;
+      cacheL2[i].tag = randomTagL2;                               // Llenando L2
+      cacheL2[i].dirty = 0;
+      cacheL2[i].rp_value = associativityL2-1-i;
+
+      if(i == 0){cacheL2[i].tag = adress_AL2;}   // Guarda el valor del tag A en L2 para forzar un hit
+    } 
+
+
+/////////////////////     5. Read or Write (choose the operation randomly) AddressA.     ///////////////////
+   
+    bool LS = rand()%2;                               // Escritura o lectura Random
+
+    lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL2,associativityL1,LS,cacheL1,cacheL2,&resultL1L2,0);  
+       
+
+    /*
+  1. Check operation result in L1 is a miss.
+  2. Check operation result in L2 is a hit.
+  3. Check LRU data in L1 line is evicted**.
+  4. Check replacement policy values in L1/L2 were updated properly.
+  5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+  
+  // 1. Check operation result in L1 is a miss
+    EXPECT_EQ(resultL1L2.MissL1, 1);  //revisa que fuera un miss en L1
+  
+  // 2. Check operation result in L2 is a miss 
+ 
+    EXPECT_EQ(resultL1L2.HitL2,1); //revisa que fuera un hit en L2
+  
+ // 3. Check LRU data in L1 line is evicted**.
+
+    EXPECT_EQ(resultL1L2.evicted_addressL1,LessUsedTagL1); //revisa que sacara al tag con mayor  valor de reemplazo en L1
+  
+  
+ // 4. Check replacement policy values in L1/L2 were updated properly.
+
+   for (int i = 0; i < associativityL1 -1 ; i++)
+  {
+    if (cacheL1[i].tag == adress_AL1)
+    {
+      EXPECT_EQ(cacheL1[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L1
+    }
+  }   
+
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2)
+    {
+      EXPECT_EQ(cacheL2[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L2
+    }
+  }  
+
+  // 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ 
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2 && LS)
+    {
+      EXPECT_EQ(cacheL2[i].dirty, 1); // Revisa que el valor del dirty este sucio si se escribio
+    }
+  }  
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//-----CACHE_MULTI-NIVEL: L1 hit 
+/*
+1. Choose a random associativity
+2. Choose a random address (AddressA)
+3. Fill a l1 cache line with random addresses, making sure AddressA is added.
+4. Fill a l2 cache line with random addresses, making sure AddressA is added.
+5. Read or Write (choose the operation randomly) AddressA. Check
+*/
+
+TEST(L2,hit){
+
+  int associativityL1,associativityL2;
+  int adress_AL1, adress_AL2;
+
+/////////////////////      1. Choose a random associativity      ///////////////////
+  associativityL1 = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  associativityL2 = associativityL1 << 1; //Es el doble de la asociatividad de L1
+  
+/////////////////////      2. Choose a random address (AddressA)      ///////////////////
+  adress_AL1 = rand()%4096; // tag random
+  adress_AL2 >> 1;
+  
+  struct entry cacheL1[associativityL1];  // Set de L1
+  struct entry cacheL2[associativityL2];  //Set de L2
+  struct operation_result_L2 resultL1L2 = {};
+
+  int randomTagL1, randomTagL2;
+  
+/////////////////////     3. Fill a l1 cache line with random addresses, making sure AddressA is added.     ///////////////////
+  
+  for (int j =  0; j < associativityL1; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      cacheL1[j].valid = false;
+      cacheL1[j].tag = randomTagL1;                               // Llenando L1
+      cacheL1[j].dirty = 0;
+      cacheL1[j].rp_value = associativityL1-1-j;
+
+      if(j == 0){cacheL1[j].tag = adress_AL1;}   // Guarda el valor del tag A en L1 para forzar un hit
+
+    }  
+
+/////////////////////     4. Fill a l2 cache line with random addresses, making sure AddressA is added.     ///////////////////
+  
+
+  for (int i =  0; i < associativityL2; i++) {
+
+      cacheL2[i].valid = false;
+      cacheL2[i].tag = randomTagL2;                               // Llenando L2
+      cacheL2[i].dirty = 0;
+      cacheL2[i].rp_value = associativityL2-1-i;
+
+      if(i == 0){cacheL2[i].tag = adress_AL2;}   // Guarda el valor del tag A en L2 para forzar un hit
+    } 
+
+
+/////////////////////     5. Read or Write (choose the operation randomly) AddressA.     ///////////////////
+   
+    bool LS = rand()%2;                               // Escritura o lectura Random
+
+    lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL2,associativityL1,LS,cacheL1,cacheL2,&resultL1L2,0);  
+       
+
+    /*
+  1. Check operation result in L1 is a hit
+  2. Check LRU data in L1 line is evicted**.
+  3. Check replacement policy values in L1/L2 were updated properly.
+  4. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ */
+
+  
+  // 1. Check operation result in L1 is a miss
+    EXPECT_EQ(resultL1L2.HitL1, 1);  //revisa que fuera un Hit en L1
+  
+  // 2. Check LRU data in L1 line is evicted**.
+ 
+    EXPECT_EQ(resultL1L2.evicted_addressL1,0); //revisa lo que sale de L1, en este caso como es un  hit, no sale nada
+  
+ // 3. Check replacement policy values in L1/L2 were updated properly.
+
+   for (int i = 0; i < associativityL1 -1 ; i++)
+  {
+    if (cacheL1[i].tag == adress_AL1)
+    {
+      EXPECT_EQ(cacheL1[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L1
+    }
+  }   
+
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2)
+    {
+      EXPECT_EQ(cacheL2[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L2
+    }
+  }  
+
+  // 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
+ 
+    for (int i = 0; i < associativityL2 -1 ; i++)
+  {
+    if (cacheL2[i].tag == adress_AL2 && LS)
+    {
+      EXPECT_EQ(cacheL2[i].dirty, 1); // Revisa que el valor de reemplazo del dato que hizo hit sea 0
+    }
+  }  
+
+
+
+   // eliminando memoria dinamica
+  delete &resultL1L2;
+  for(int i = 0; i < associativityL1; i++)
+  {
+    delete[] &cacheL1[i];
+  }
+  delete[] cacheL1; 
+  
+}
+  
+  
+ 
+
+
+
+
+
 
 /* 
  * Gtest main function: Generates random seed, if not provided,

@@ -72,101 +72,6 @@ void address_tag_idx_get(long address,
    *tag = *tag >> (idx_size + offset_size - 1) ;
 }
 
-int srrip_replacement_policy (int idx,
-                             int tag,
-                             int associativity,
-                             bool loadstore,
-                             entry* cache_blocks,
-                             operation_result* result,
-                             bool debug)
-{
-
-   bool replace,hit_o_miss = false;
-        
-//------------------------------ Verificar Si es Hit -----------------------------
-   if (idx < 0 || tag < 0 ) {    return ERROR;   }
-
-//------------------- Verificar si associativity es valido------------------------
-   double associativity_double = log2((double)associativity); 
-   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
-
-//-----------------------------Verificar si hay un HIT----------------------------
-   for(int j=0; j < associativity; j++)
-   {
-	//---------------------ocurrio un hit----------------------
-      if(cache_blocks[j].tag == tag && cache_blocks[j].valid == true)
-      {
-       //------------- Configura los valores para un hit-----------   
-         result->dirty_eviction = false;
-         cache_blocks[j].rp_value = 0;  
-         hit_o_miss = true;
-	
-	//---------------------- si es un hit store----------------
-         if(loadstore)  
-         {
-            cache_blocks[j].dirty = true; 
-            result->miss_hit = HIT_STORE; 
-         }
-         //------------------- si es un hit load ------------------
-	else           
-         {
-            result->miss_hit = HIT_LOAD;  
-         }
-               
-         j = associativity; // -------Sale del bucle----------------
-      }
-   }
-       // ----------------------------- ocurrio un miss ------------------------
-      if(!hit_o_miss)
-         {        
-            replace = false;
-            while(!replace)
-            {
-               for(int m = 0; m < associativity; m++)
-               {
-                  if(cache_blocks[m].rp_value == (associativity-1))
-                  {
-                     result->evicted_address = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; // Linea que me pidió
-                     
-                     cache_blocks[m].valid = true; // ------Lo hace valido-------
-                     cache_blocks[m].tag = tag;   // ----Guarda el nuevo tag-----
-
-                     result->dirty_eviction = (cache_blocks[m].dirty)? true: false;   //Si hubo dirty eviction
-               	
-		     //------------- si hay un miss store ------------------------
-                     if(loadstore) 
-                     {
-                        cache_blocks[m].dirty = true;   
-                        result->miss_hit = MISS_STORE;    
-                     }
-		     //------------- si hay un miss load ------------------------
-                     else        
-                     {
-                        cache_blocks[m].dirty = false;   
-                        result->miss_hit = MISS_LOAD;    
-                     }
-                     //-------------- Valor para la politica de reemplazo ---------------- 
-                     cache_blocks[m].rp_value = (associativity <= 2) ? 0:2; // Si la asociatividad es <= 2, el valor de remplazo es 0, de lo contrario será 2.   
-                     m = associativity; //---------- Para salir del bucle------------------
-                     replace = true;
-                  }    
-               }
-                //------ Si ninguno tiene valor de reemplazo = (asociatividad-1) se procede a aumentar los valores-----
-               if(!replace)
-               {
-		//----------------------- suma 1 a la politica de remplazo---------------------------------
-                  for(int g = 0; g < associativity; g++)
-                     {
-                        if(cache_blocks[g].rp_value < (associativity - 1)){  cache_blocks[g].rp_value += 1;   }  
-                     }
-               }  
-            }
-         }
-   return OK;
-}
-        
-
-
 
 // TESTEADA
 int lru_replacement_policy (int idx,
@@ -292,6 +197,7 @@ int lru_L1_L2_replacement_policy (int idx,
          hit_o_missL1 = true;                   // Declara al sistema que hubo hit en L1
          cache_blocks[i].rp_value = 0;          // Le asigna valor de remplazo 0.
          operation_result_L2->HitL1 +=1; 
+         operation_result_L2->evicted_addressL1 = 0; // no sale nada de L1 por que es un hit.
          
          if(loadstore){  
             //------- si es un hit store-----------
@@ -303,6 +209,16 @@ int lru_L1_L2_replacement_policy (int idx,
                }
             }
          }
+         // -----------Actualizando el valor de reemplazo en L2
+            for(int i = 0; i < associativityL2; i++){
+               if(cache_blocksL2[i].tag == tagL2 && cache_blocksL2[i].valid){  
+                  for(int j = 0; j < associativityL2; j++){
+                     if(cache_blocksL2[j].rp_value < (cache_blocksL2[i].rp_value)){  cache_blocksL2[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
+                  }                           
+                  cache_blocksL2[i].rp_value = 0;  
+                  i = associativityL2;     
+               }
+            }
          //------------Terminando el for-----------
          i = associativity;
       }
@@ -332,7 +248,7 @@ int lru_L1_L2_replacement_policy (int idx,
                
                //----------------si es el bloque del set con menos prioridad---------------------------
                if(cache_blocks[m].rp_value == (associativity - 1)){  
-                  operation_result_L2->evicted_address = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; 
+                  operation_result_L2->evicted_addressL1 = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; 
                   cache_blocks[m].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                   cache_blocks[m].tag = tag;                      //-----tag nuevo guardado en el set----------
 
@@ -360,7 +276,7 @@ int lru_L1_L2_replacement_policy (int idx,
             //----------------si es el bloque del set con menos prioridad---------------------------
             if(cache_blocksL2[i].rp_value == (associativityL2 - 1)){  
            
-               operation_result_L2->evicted_address = (cache_blocksL2[i].valid)? cache_blocksL2[i].tag: 0 ; 
+               operation_result_L2->evicted_addressL2 = (cache_blocksL2[i].valid)? cache_blocksL2[i].tag: 0 ; 
             
                cache_blocksL2[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                cache_blocksL2[i].tag = tagL2;                      //-----tag nuevo guardado en el set----------
@@ -385,7 +301,7 @@ int lru_L1_L2_replacement_policy (int idx,
 
             //----------------si es el bloque del set con menos prioridad---------------------------
             if(cache_blocks[i].rp_value == (associativity - 1)){  
-               operation_result_L2->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
+               operation_result_L2->evicted_addressL1 = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
                cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                cache_blocks[i].tag = tag;                      //-----tag nuevo guardado en el set----------
                
