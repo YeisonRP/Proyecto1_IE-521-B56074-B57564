@@ -374,7 +374,7 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Overall miss rate"<<"          " << OMR <<"\n";
             cout << "  L1 miss rate:"<<"              " << L1MR <<"\n";
             cout << "  L2 miss rate:"<<"              " << L2MR<<"\n";
-            cout << "  Global miss rate:"<<"          " << "000" <<"\n";
+            cout << "  Global miss rate:"<<"          " << GMR <<"\n";
             cout << "  Misses (L1):"<<"               " << L2->MissL1 << "\n";
             cout << "  Hits (L1):"<<"                 " << L2->HitL1  << "\n";
             cout << "  Misses (L2):"<<"               " << L2->MissL2  << "\n";
