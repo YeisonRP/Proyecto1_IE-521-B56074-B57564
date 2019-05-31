@@ -1,3 +1,4 @@
+
 /*
  *  Cache simulation project
  *  Class UCR IE-521
@@ -356,6 +357,8 @@ void simulation_outL2( int cache_size_kb,
    {
       double L1MR = (double)L2->MissL1/double(L2->MissL1+L2->HitL1);
       double L2MR = (double)L2->MissL2/double(L2->MissL2+L2->HitL2);
+      double GMR = L1MR*L2MR;
+      double OMR = double(L2->MissL1+L2->MissL2)/double(L2->MissL1+L2->HitL1);
 
       cout << "------------------------------------------\n";
             cout << "  Cache parameters:\n";
@@ -368,15 +371,15 @@ void simulation_outL2( int cache_size_kb,
             cout << "------------------------------------------\n";
             cout << "  Simulation results:\n";
             cout << "------------------------------------------\n";
-            cout << "  Overall miss rate"<<"         " << "000" <<"\n";
-            cout << "  L1 miss rate:"<<"            " << L1MR <<"\n";
-            cout << "  L2 miss rate:"<<"            " << L2MR<<"\n";
-            cout << "  Global miss rate:"<<"            " << "000" <<"\n";
+            cout << "  Overall miss rate"<<"          " << OMR <<"\n";
+            cout << "  L1 miss rate:"<<"              " << L1MR <<"\n";
+            cout << "  L2 miss rate:"<<"              " << L2MR<<"\n";
+            cout << "  Global miss rate:"<<"          " << "000" <<"\n";
             cout << "  Misses (L1):"<<"               " << L2->MissL1 << "\n";
             cout << "  Hits (L1):"<<"                 " << L2->HitL1  << "\n";
             cout << "  Misses (L2):"<<"               " << L2->MissL2  << "\n";
             cout << "  Hits (L2):"<<"                 " << L2->HitL2  << "\n";
-            cout << "  Dirty evictions (L2):"<<"           " << L2->dirty_eviction  << "\n";
+            cout << "  Dirty evictions (L2):"<<"      " << L2->dirty_eviction  << "\n";
             cout << "------------------------------------------\n";
    }                    
 void simulation_out( int cache_size_kb, 
@@ -614,3 +617,5 @@ int comun_vc_L1(   int tag,
       }
    }
 }
+
+
