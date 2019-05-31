@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <debug_utilities.h>
 #include <L1cache.h>
+#include <math.h>
 #define YEL   "\x1B[33m"
 
 /* Globals */
@@ -722,9 +723,9 @@ TEST(VC, miss_hit){
   
 /////////////////////      2. Choose a random address (AddressA)      ///////////////////
 
-  int idex_size = 4; //idx_size
+  int idex_size = rand()%8 + 1; //idx_size
   int tag_random = rand()%4096; // tag random
-  int indx_random = rand()%16; // 4 bits de index
+  int indx_random = rand()%((int)pow(2,idex_size)); // 4 bits de index
   int tag_A = tag_random;
   int idx_A = indx_random;
   adress_A = joining_tag_index(idex_size,indx_random,tag_random);    //direccion random A
@@ -822,6 +823,7 @@ TEST(VC, miss_hit){
   // reading or writing
 
   comun_vc_L1(tag_A,idx_A,idex_size,associativity,loadstore,vc,cache[indx_random],resultado_vc,resultado_L1,miss,hits,vc_hits,dirty);
+
 /*
  * 1. Check operation result is a HIT
  * 2. Check LRU data in L1 line is swapped with AddressA data in the victim cache.
@@ -869,12 +871,13 @@ TEST(VC, miss_hit){
   }
 
   // eliminando memoria dinamica
+
   delete miss, hits, vc_hits, dirty, resultado_L1, resultado_vc,index,tag_r;
-  for(int i = 0; i < associativity; i++)
+  for(int i = 0; i < ((int)pow(2,idex_size)); i++)
   {
     delete[] cache[i];
   }
-  delete[] cache;  
+  delete[] cache; 
 }
 
 /*
@@ -904,9 +907,9 @@ TEST(VC, miss_miss){
   
 /////////////////////      2. Choose a random address (AddressA)      ///////////////////
 
-  int idex_size = 4; //idx_size
+  int idex_size = rand()%8 + 1; //idx_size
   int tag_random = rand()%4096; // tag random
-  int indx_random = rand()%16; // 4 bits de index
+  int indx_random = rand()%((int)pow(2,idex_size)); // 4 bits de index
   int tag_A = tag_random;
   int idx_A = indx_random;
   adress_A = joining_tag_index(idex_size,indx_random,tag_random);    //direccion random A
@@ -1062,7 +1065,7 @@ TEST(VC, miss_miss){
   
   // eliminando memoria dinamica
   delete miss, hits, vc_hits, dirty, resultado_L1, resultado_vc,index,tag_r;
-  for(int i = 0; i < associativity; i++)
+  for(int i = 0; i < ((int)pow(2,idex_size)); i++)
   {
     delete[] cache[i];
   }
