@@ -217,16 +217,13 @@ int main(int argc, char * argv []) {
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
   // Liberando memoria del arreglo de la cache
-  entry **cache_matrix = new entry*[*cantidad_sets];
-  for(int i = 0; i < associativity; i++)
-  {
-    delete [] cache_matrix[i];
-  }
 
-  delete [] cache_matrix;
+  delete[] vc;
+  delete[] cache;
+  delete[] cacheL2;
 
   // Liberando memoria de las demas variables
-  delete tag_size, index_size, offset_size, cantidad_sets, tag, index, vc, resultado_L1_en_VC ,resultado_VC, misses, hits, VC_hits, dirty_evictions;
+  delete tag_size, index_size, offset_size, cantidad_sets, tag, index, resultado_L1_en_VC ,resultado_VC, misses, hits, VC_hits, dirty_evictions;
 
    //--------------------- Termina el conteo de tiempo y se calcula el tiempo de ejecucion---------------------
 
