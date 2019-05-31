@@ -434,12 +434,12 @@ TEST(L2, miss_miss){
       do{randomTagL1 = rand()%4096; }
       while(randomTagL1 == adress_AL1);
 
-      if(j==0){LessUsedTagL1=randomTagL1;}         // Guarda el tag que va a tener valor de reemplazo asociatividad-1
-
-      cacheL1[j].valid = false;
+      cacheL1[j].valid = true;
       cacheL1[j].tag = randomTagL1;                               // Llenando L1
       cacheL1[j].dirty = 0;
       cacheL1[j].rp_value = associativityL1-1-j;
+      
+      if(j==0){LessUsedTagL1=randomTagL1;}         // Guarda el tag que va a tener valor de reemplazo asociatividad-1
     }  
 
 /////////////////////     4. Fill a l2 cache line with random addresses, making sure AddressA is not added.     ///////////////////
@@ -450,12 +450,12 @@ TEST(L2, miss_miss){
       do{randomTagL2 = rand()%4096; }
       while(randomTagL2 == adress_AL2);
 
-      if(i==0){LessUsedTagL1=randomTagL2;}           // Guarda el tag que va a tener valor de reemplazo asociatividad-1
-
-      cacheL2[i].valid = false;
+      cacheL2[i].valid = true;
       cacheL2[i].tag = randomTagL2;                               // Llenando L2
       cacheL2[i].dirty = 0;
       cacheL2[i].rp_value = associativityL2-1-i;
+
+      if(i==0){LessUsedTagL2=randomTagL2;}           // Guarda el tag que va a tener valor de reemplazo asociatividad-1
     } 
 
 
@@ -559,7 +559,7 @@ TEST(L2, miss_hit){
 
       if(j==0){LessUsedTagL1=randomTagL1;}         // Guarda el tag que va a tener valor de reemplazo asociatividad-1
 
-      cacheL1[j].valid = false;
+      cacheL1[j].valid = true;
       cacheL1[j].tag = randomTagL1;                               // Llenando L1
       cacheL1[j].dirty = 0;
       cacheL1[j].rp_value = associativityL1-1-j;
@@ -570,7 +570,7 @@ TEST(L2, miss_hit){
 
   for (int i =  0; i < associativityL2; i++) {
 
-      cacheL2[i].valid = false;
+      cacheL2[i].valid = true;
       cacheL2[i].tag = randomTagL2;                               // Llenando L2
       cacheL2[i].dirty = 0;
       cacheL2[i].rp_value = associativityL2-1-i;
@@ -672,7 +672,7 @@ TEST(L2,hit){
       do{randomTagL1 = rand()%4096; }
       while(randomTagL1 == adress_AL1);
 
-      cacheL1[j].valid = false;
+      cacheL1[j].valid = true;
       cacheL1[j].tag = randomTagL1;                               // Llenando L1
       cacheL1[j].dirty = 0;
       cacheL1[j].rp_value = associativityL1-1-j;
@@ -686,7 +686,7 @@ TEST(L2,hit){
 
   for (int i =  0; i < associativityL2; i++) {
 
-      cacheL2[i].valid = false;
+      cacheL2[i].valid = true;
       cacheL2[i].tag = randomTagL2;                               // Llenando L2
       cacheL2[i].dirty = 0;
       cacheL2[i].rp_value = associativityL2-1-i;
@@ -719,7 +719,7 @@ TEST(L2,hit){
   
  // 3. Check replacement policy values in L1/L2 were updated properly.
 
-   for (int i = 0; i < associativityL1 -1 ; i++)
+   for (int i = 0; i < associativityL1 ; i++)
   {
     if (cacheL1[i].tag == adress_AL1)
     {
@@ -727,21 +727,21 @@ TEST(L2,hit){
     }
   }   
 
-    for (int i = 0; i < associativityL2 -1 ; i++)
+    for (int j = 0; j < associativityL2; j++)
   {
-    if (cacheL2[i].tag == adress_AL2)
+    if (cacheL2[j].tag == adress_AL2)
     {
-      EXPECT_EQ(cacheL2[i].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L2
+      EXPECT_EQ(cacheL2[j].rp_value, 0); // Revisa que ponga correctamente el valor de reemplazo en L2
     }
   }  
 
   // 5. Check dirty bit value of AddressA was changed accordingly with the operation performed
  
-    for (int i = 0; i < associativityL2 -1 ; i++)
+    for (int m = 0; m < associativityL2 ; m++)
   {
-    if (cacheL2[i].tag == adress_AL2 && LS)
+    if (cacheL2[m].tag == adress_AL2 && LS)
     {
-      EXPECT_EQ(cacheL2[i].dirty, 1); // Revisa que el valor de reemplazo del dato que hizo hit sea 0
+      EXPECT_EQ(cacheL2[m].dirty, 1); // Revisa que el valor de reemplazo del dato que hizo hit sea 0
     }
   }  
 
