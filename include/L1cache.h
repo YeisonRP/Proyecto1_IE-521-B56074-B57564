@@ -26,11 +26,6 @@ enum replacement_policy{
   NONE
 };
 
-/* Hit or miss in victim cache  */
-enum miss_hit_status_vc {
- MISS,
- HIT
-};
 
 enum miss_hit_status {
  MISS_LOAD,
@@ -190,13 +185,6 @@ entry** creando_matriz_cache  (int idx_size,
 
 
 
-
-/* Cache replacement policy results */
-struct operation_result_vc {
- enum miss_hit_status_vc miss_hit;
- bool dirty_eviction;
- int  evicted_tag;
-};
 
 
 void simulation_outL2( int cache_size_kb, 
