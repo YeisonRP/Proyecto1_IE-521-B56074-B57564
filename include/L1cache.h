@@ -196,3 +196,80 @@ void simulation_outL2( int cache_size_kb,
 
 
 #endif
+
+
+/*
+
+PROTOCOLO MESI para un bloque llamado  bloque1 (que esta por ejemplo en el set 3 way 2) en el L1 del CORE 1
+
+if(HAY HIT DEL bloque1 EN L1)
+{ 
+  if(bloque1 tiene estado I) 
+  {
+
+    PREGUNTAAAAAAAAA. Si estaba invalido el bloque y pasa a exclusivo, significa que
+    se tuvo que traer el dato de MM. En este caso seria un hit de todas formas?
+
+    if(Era un read)
+    {
+       se debe buscar en la L1 del otro core y en L2, si esta en alguna de estas se debe pasar
+       al estado S todos los bloques (excepto si estan en I). (funciones get y set? u otra)
+
+       En caso contrario pasa a E
+    }
+    
+    if(Era un write)
+    {
+       Se debe pasar al estado modificado, y verificar si esta en el L1 del otro core o L2 para ponerlo I
+    }
+  }
+
+  if(bloque1 tiene estado E)
+  {
+    if(Era un read)
+    {
+        Se queda en E. Porque tiene el mismo dato que MM y ninguna otra memoria de la jerarquia tiene el dato
+    }
+    
+    if(Era un write)
+    {
+        Se pasa al estado M. 
+    } 
+  }
+  if(bloque1 tiene estado S)
+  {
+      if(Era un read)
+      {
+          Se queda en S
+      }
+      
+      if(Era un write)
+      {
+          Se pasa al estado M. SE debe mandar mensaje a L2 y al otro core para que invalide el dato
+      }  
+  }
+  if(bloque1 tiene estado M)
+  {
+    if(Era un read)
+    {
+        se queda en M
+    }
+    
+    if(Era un write)
+    {
+        se queda en M
+    }    
+  }
+}
+
+if(HAY miss DEL bloque1 EN L1 y hit en L2)
+{ 
+se hace lo mismo que en el anterior solo que ahora solo se debe verificar el otro core para ver si 
+tiene el dato y acomodarlo segun corresponda.
+
+El dato de L2 y el core 1 es el mismo despues del miss del core 1 y hit de L2
+}
+
+    
+
+ */
