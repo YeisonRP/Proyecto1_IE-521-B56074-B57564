@@ -33,9 +33,9 @@ int main(int argc, char * argv []) {
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
-  int opt;           // 0 VC, 1 L2, 2 NONE
+  int cp;           // 0 VC, 1 L2, 2 NONE
   int err = 0;            //Para saber si hubo error
-  string comandos[4] = {"-t", "-a", "-l", "-opt"};
+  string comandos[4] = {"-t", "-a", "-l", "-cp"};
   for(int i = 1; i <= 8; i+=2)
   { 
     if(argv[i] == comandos[0]){ sizeCacheKB = atoi(argv[i + 1]);  err++;  }
@@ -43,10 +43,9 @@ int main(int argc, char * argv []) {
     if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  err++;  }
     if(argv[i] == comandos[3])
     {   
-      string politicas[3] = {"VC","L2","NONE"};
-      if(argv[i + 1] == politicas[0]){ opt = 0; err++; }
-      else if(argv[i + 1] == politicas[1]){ opt = 1; err++;  }
-          else if(argv[i + 1] == politicas[2]){ opt = 2; err++;  }
+      string coherence[3] = {"MSI","MESI"};
+      if(argv[i + 1] == coherence[0]){ cp = 0; err++; }
+      else if(argv[i + 1] == coherence[1]){ cp = 1; err++;  }
             else{ opt = -1; } //Error    
     }
   }

@@ -39,12 +39,20 @@ enum miss_hit_status {
  HIT_STORE
 };
 
+enum coherence {            // Estados de coherencia
+  INVALID,
+  SHARED,
+  MODIFIED,
+  EXCLUSIVE
+};
+
 /*
  * STRUCTS
  */
 
 /* Cache tag array fields */
 struct entry {
+ enum coherence state;          // Estado de coherencia en el bloque 
  bool valid ;
  bool dirty ;
  int tag ;
@@ -191,6 +199,15 @@ struct operation_result_vc {
 };
 
 
+void simulation_outL2( int cache_size_kb, 
+                       int associativity,  
+                       int block_size,   
+                       operation_result_L2* L2
+                       );
+
+////////////////////////////////////// ESTO NO SE USA //////////////////////////////////////////////////////////////
+
+
 /* 
  * Crea el victim cache y lo inicializa
  * Return: puntero al arreglo del victim cache
@@ -291,11 +308,9 @@ void simulation_out( int cache_size_kb,
                      int victim_cache_hits,
                      int opt);
                      
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void simulation_outL2( int cache_size_kb, 
-                       int associativity,  
-                       int block_size,   
-                       operation_result_L2* L2
-                       );
+
+
 
 #endif

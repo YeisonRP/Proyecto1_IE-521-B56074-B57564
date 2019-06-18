@@ -74,6 +74,8 @@ void address_tag_idx_get(long address,
 }
 
 
+///////////////////////////////////////////// NO SE USA ///////////////////////////////////////////////////////////////
+
 // TESTEADA
 int lru_replacement_policy (int idx,
                              int tag,
@@ -162,6 +164,7 @@ int lru_replacement_policy (int idx,
    return OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int lru_L1_L2_replacement_policy (int idx,
                            int tag,
@@ -352,7 +355,8 @@ entry** creando_matriz_cache  (int idx_size,
       
 void simulation_outL2( int cache_size_kb, 
                      int associativity, 
-                     int block_size,   
+                     int block_size,  
+                     int cp, 
                      operation_result_L2* L2)
    {
       double L1MR = (double)L2->MissL1/double(L2->MissL1+L2->HitL1);
@@ -368,20 +372,19 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
             cout << "  Cache L2 Associativity: "<<"      " << associativity*2 << "\n";
             cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
+            cout << "  Coherence protocol                " << cp "\n";
             cout << "------------------------------------------\n";
             cout << "  Simulation results:\n";
             cout << "------------------------------------------\n";
-            cout << "  Overall miss rate"<<"          " << OMR <<"\n";
-            cout << "  L1 miss rate:"<<"              " << L1MR <<"\n";
-            cout << "  L2 miss rate:"<<"              " << L2MR<<"\n";
-            cout << "  Global miss rate:"<<"          " << GMR <<"\n";
-            cout << "  Misses (L1):"<<"               " << L2->MissL1 << "\n";
-            cout << "  Hits (L1):"<<"                 " << L2->HitL1  << "\n";
-            cout << "  Misses (L2):"<<"               " << L2->MissL2  << "\n";
-            cout << "  Hits (L2):"<<"                 " << L2->HitL2  << "\n";
-            cout << "  Dirty evictions (L2):"<<"      " << L2->dirty_eviction  << "\n";
+            cout << "  Overall miss rate"<<"               " << OMR <<"\n";
+            cout << "  CPU1 L1 miss rate:"<<"              " << L1MR <<"\n";
+            cout << "  CPU2 L2 miss rate:"<<"              " << L2MR<<"\n";
+            cout << "  Coherence Invalidation CPU1"<<"     " << GMR <<"\n";
+            cout << "  Coherence Invalidation CPU2"<<"     " << GMR <<"\n";
             cout << "------------------------------------------\n";
-   }                    
+   }       
+
+ //////////////////////////////////////////// NO SE USA /////////////////////////////////////////////////////////////////               
 void simulation_out( int cache_size_kb, 
                      int associativity, 
                      int block_size,  
@@ -617,5 +620,5 @@ int comun_vc_L1(   int tag,
       }
    }
 }
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
