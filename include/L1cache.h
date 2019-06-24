@@ -225,7 +225,37 @@ void set_coherence_state (int tag,
                           coherence coherence_state);
 
 
+
+void insert_LRU_data_in_cache_set(int idx,
+                                  int tag,
+                                  int associativity,
+                                  bool loadstore,
+                                  entry* cache_blocks,
+                                  operation_result* operation_result
+);
+
+
+void MESI(  int idx,
+            int tag,
+            int idxL2,
+            int tagL2,
+            int associativity,
+            bool loadstore,
+            entry* cache_blocks_L1_C1,
+            entry* cache_blocks_L1_C2,
+            entry* cache_blocksL2,                           
+            operation_result_L2* operation_result_L2);
+
+
+
+
 #endif
+
+
+
+
+
+
 
 
 /*

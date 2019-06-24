@@ -372,7 +372,7 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
             cout << "  Cache L2 Associativity: "<<"      " << associativity*2 << "\n";
             cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
-            cout << "  Coherence protocol                " << cp "\n";
+            cout << "  Coherence protocol                " << "\n";
             cout << "------------------------------------------\n";
             cout << "  Simulation results:\n";
             cout << "------------------------------------------\n";
@@ -417,3 +417,6 @@ void set_coherence_state (int tag,
       }
    }
 }
+
+
+

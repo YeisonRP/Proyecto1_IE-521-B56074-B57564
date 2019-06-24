@@ -121,7 +121,10 @@ int main(int argc, char * argv []) {
   int *tagL2 = new int;
   int *indexL2 = new int;
   struct operation_result_L2 resultL1L2 = {};
-
+  resultL1L2.HitL1 = 0;
+  resultL1L2.HitL2 = 0;
+  resultL1L2.MissL1 = 0;
+  resultL1L2.MissL2 = 0;
 
   int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
   // miss_hit_counter[0]  = MISS_LOAD
