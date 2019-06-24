@@ -206,14 +206,17 @@ int lru_L1_L2_replacement_policy (int idx,
          if(loadstore){  
             //------- si es un hit store-----------
             //--------- Busca el tag en L2 para ponerlo sucio-------
+
             for(int a = 0; a < associativityL2; a++){
                if(cache_blocksL2[a].tag == tagL2){
+                  // Poner el estado en Modified                       // <---------------------------- IMPORTANTE
                   cache_blocksL2[a].dirty = true;
                   a = associativityL2;
                }
             }
          }
-         // -----------Actualizando el valor de reemplazo en L2
+         // else{ si el otro procesador no lo tiene y el protocolo es MSI pone el estado en shared, sino es Exclusive } 
+         // -----------Actualizando el valor de reemplazo en L2                                                            // <---------------------------- IMPORTANTE
             for(int i = 0; i < associativityL2; i++){
                if(cache_blocksL2[i].tag == tagL2 && cache_blocksL2[i].valid){  
                   for(int j = 0; j < associativityL2; j++){
@@ -242,10 +245,17 @@ int lru_L1_L2_replacement_policy (int idx,
             hit_o_missL2 = true;                  // Indica al sistema que hubo un hit en L2
             cache_blocksL2[i].rp_value = 0;       // Asiga un cero al valor de reemplazo
             operation_result_L2->HitL2 += 1; 
+            
             if(loadstore){  
                //------- si es un hit store pone sucio el dato en L2 -----------
+
+               // Pasa de cualquier estado a Modified
+               // va a cambiar el estado a L1                  // <---------------------------- IMPORTANTE
+
                cache_blocksL2[i].dirty = true; 
             }
+            // else{ Pasa de cualquier estado a shared        // <---------------------------- IMPORTANTE
+                  // Va a cambiar estado a L1 }
 
           //------------------------ Guarda el dato en L1-------------------------------
             for(int m = 0; m < associativity; m++){
@@ -288,8 +298,13 @@ int lru_L1_L2_replacement_policy (int idx,
                
                if(loadstore){
                // -----------si hubo miss store----------------
-                  cache_blocksL2[i].dirty = true;      
+                  cache_blocksL2[i].dirty = true;    
+
+                  // Pone el estado en Modified       // <---------------------------- IMPORTANTE  
+                  // va a cambiar el estado a L1
                }
+               // else {Pone el estado en Exclusive o en shared dependiendo del protocolo de coherencia
+                     // Va a cambiar el estado a L1}     // <---------------------------- IMPORTANTE
          
                //----------suma 1 a los valores de remplazo correspondientes ----------------
                for(int j = 0; j < associativityL2; j++){  
@@ -393,7 +408,7 @@ coherence get_coherence_state (int tag,
 
    for (int i = 0; i < associativity; i++)
    {
-      if (cache_blocks[i].tag == tag & cache_blocks[i].dirty == 0)   //-- Si se encuentra el dato y no esta sucio
+      if (cache_blocks[i].tag == tag & cache_blocks[i].valid == 0)   //-- Si se encuentra el dato y no esta valido
       {
          return cache_blocks[i].state; //-- Retorna el estado si encontro el dato
       }
