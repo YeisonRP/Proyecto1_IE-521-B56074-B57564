@@ -38,7 +38,8 @@ enum coherence {            // Estados de coherencia
   INVALID,
   SHARED,
   MODIFIED,
-  EXCLUSIVE
+  EXCLUSIVE,
+  NONE_
 };
 
 /*
@@ -194,6 +195,35 @@ void simulation_outL2( int cache_size_kb,
                        );
 
 
+/* 
+ * Search for the coherence_state of a specific
+ * block in a cache set
+ * 
+ * [in] tag: tag field of the block
+ * [in] associativity: number of ways of the entry
+ * [in] cache_block: cache block
+ * [out] return: return the coherence state of the data (INVALID,SHARED,MODIFIED,EXCLUSIVE),
+ *               if the tag is not in the block, return NONE_
+ */
+coherence get_coherence_state ( int tag,
+                                int associativity,
+                                entry* cache_blocks);
+
+
+/* 
+ * Set the coherence_state of a specific
+ * block
+ * 
+ * [in] tag: tag field of the block
+ * [in] associativity: number of ways of the entry
+ * [in] cache_block: cache block
+ * [in] coherence_state: new coherence_state of the data (INVALID,SHARED,MODIFIED,EXCLUSIVE)
+ */
+void set_coherence_state (int tag,
+                          int associativity,
+                          entry* cache_blocks,
+                          coherence coherence_state);
+
 
 #endif
 
@@ -207,8 +237,13 @@ if(HAY HIT DEL bloque1 EN L1)
   if(bloque1 tiene estado I) 
   {
 
-    PREGUNTAAAAAAAAA. Si estaba invalido el bloque y pasa a exclusivo, significa que
-    se tuvo que traer el dato de MM. En este caso seria un hit de todas formas?
+    PREGUNTAS. 
+	Si estaba invalido el bloque y pasa a exclusivo, significa que
+    	se tuvo que traer el dato de MM. En este caso seria un hit de todas formas?
+
+	Si hay miss en L1 y hit en L2, se copia el dato junto con el estado en ambos?
+
+	Que significa lo de coherency de los resultados a imprimir?
 
     if(Era un read)
     {

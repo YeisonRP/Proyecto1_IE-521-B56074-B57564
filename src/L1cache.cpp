@@ -385,3 +385,35 @@ void simulation_outL2( int cache_size_kb,
    }       
 
 
+//-- PROBADA
+coherence get_coherence_state (int tag,
+                               int associativity,
+                               entry* cache_blocks)
+{
+
+   for (int i = 0; i < associativity; i++)
+   {
+      if (cache_blocks[i].tag == tag & cache_blocks[i].dirty == 0)   //-- Si se encuentra el dato y no esta sucio
+      {
+         return cache_blocks[i].state; //-- Retorna el estado si encontro el dato
+      }
+   }
+   return NONE_; //-- Si no encontro el dato en el set retorna un NONE_
+
+}
+
+//-- PROBADA
+void set_coherence_state (int tag,
+                          int associativity,
+                          entry* cache_blocks,
+                          coherence coherence_state)
+{
+
+   for (int i = 0; i < associativity; i++)
+   {
+      if (cache_blocks[i].tag == tag)
+      {
+         cache_blocks[i].state = coherence_state; // Escribe el dato
+      }
+   }
+}
