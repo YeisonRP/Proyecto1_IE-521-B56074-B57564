@@ -72,7 +72,7 @@ struct operation_result_L2 {
 
  int Miss_L1_C2;
  int Hit_L1_C2;
- int Coherence_Inv_C1;
+ int Coherence_Inv_C2;
 
  int Miss_L2;
  int Hit_L2;
