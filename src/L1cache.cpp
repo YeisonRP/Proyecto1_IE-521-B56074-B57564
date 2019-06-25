@@ -173,9 +173,12 @@ int lru_L1_L2_replacement_policy (int idx,
                            int associativity,
                            bool loadstore,
                            entry* cache_blocks,
+                           entry* Other_L1_Core,
+                           int cp, 
                            entry* cache_blocksL2,                           
                            operation_result_L2* operation_result_L2,
-                           bool debug)
+                           bool debug,
+                           bool core)
 {
 //------------------------------ Verificar si tag e index son validos -----------------------------
    if (idx < 0 || tag < 0 || tagL2 < 0 || idxL2 < 0) {    return ERROR;   }
@@ -200,23 +203,33 @@ int lru_L1_L2_replacement_policy (int idx,
          }
          hit_o_missL1 = true;                   // Declara al sistema que hubo hit en L1
          cache_blocks[i].rp_value = 0;          // Le asigna valor de remplazo 0.
-         operation_result_L2->HitL1 +=1; 
          operation_result_L2->evicted_addressL1 = 0; // no sale nada de L1 por que es un hit.
          
+         if(core){operation_result_L2->Hit_L1_C2 +=1;}
+         else{operation_result_L2->Hit_L1_C1 +=1;}
+
          if(loadstore){  
             //------- si es un hit store-----------
             //--------- Busca el tag en L2 para ponerlo sucio-------
 
+            cache_blocks[i].state =  MODIFIED;  // Cambia el estado a Modified **********
+
+            set_coherence_state(tag,associativity,Other_L1_Core[idx],INVALID);  // Invalida el dato si está en el otro core ********
+
+            if(core){ operation_result_L2->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
+            else{ operation_result_L2->Coherence_Inv_C2 +=1; }   
+
             for(int a = 0; a < associativityL2; a++){
                if(cache_blocksL2[a].tag == tagL2){
-                  // Poner el estado en Modified                       // <---------------------------- IMPORTANTE
+                  cache_blocksL2[a].state =  MODIFIED;    // Cambia el estado del dato en L2 como Modified *******
                   cache_blocksL2[a].dirty = true;
                   a = associativityL2;
                }
             }
          }
-         // else{ si el otro procesador no lo tiene y el protocolo es MSI pone el estado en shared, sino es Exclusive } 
-         // -----------Actualizando el valor de reemplazo en L2                                                            // <---------------------------- IMPORTANTE
+         
+
+         // -----------Actualizando el valor de reemplazo en L2                            
             for(int i = 0; i < associativityL2; i++){
                if(cache_blocksL2[i].tag == tagL2 && cache_blocksL2[i].valid){  
                   for(int j = 0; j < associativityL2; j++){
@@ -232,7 +245,9 @@ int lru_L1_L2_replacement_policy (int idx,
    }
 //------------------------------ Se encontro que es un miss en L1 -----------------------------
    if(!hit_o_missL1){
-      operation_result_L2->MissL1 +=1;
+      if(core){operation_result_L2->Miss_L1_C2 +=1;}
+      else{operation_result_L2->Miss_L1_C1 +=1;}
+      
 
       //------------------------Busca en L2----------------------------------------------
       for(int i = 0; i < associativityL2; i++){
@@ -244,18 +259,26 @@ int lru_L1_L2_replacement_policy (int idx,
             }
             hit_o_missL2 = true;                  // Indica al sistema que hubo un hit en L2
             cache_blocksL2[i].rp_value = 0;       // Asiga un cero al valor de reemplazo
-            operation_result_L2->HitL2 += 1; 
+            operation_result_L2->Hit_L2 += 1;     // suma un hit a L2
             
             if(loadstore){  
-               //------- si es un hit store pone sucio el dato en L2 -----------
+               //------- si es un hit store en L2 pone sucio el dato en L2 -----------
 
-               // Pasa de cualquier estado a Modified
-               // va a cambiar el estado a L1                  // <---------------------------- IMPORTANTE
+               cache_blocksL2[i].state = MODIFIED;       // Pone el estado en Modified *********
 
                cache_blocksL2[i].dirty = true; 
             }
-            // else{ Pasa de cualquier estado a shared        // <---------------------------- IMPORTANTE
-                  // Va a cambiar estado a L1 }
+             else{ //-------------Si es un hit load en L2 -----------------------
+                  
+                  if(get_coherence_state(tag,associativity,Other_L1_Core[idx]) != NONE_){ // Si el otro core lo tiene pasa a shared********
+                     cache_blocksL2[i].state = SHARED;       // Pone el estado del dato en L2 en SHARED *********   
+                  }
+                  else{
+                     cache_blocksL2[i].state = SHARED;       // Pone el estado del dato en L2 en SHARED si es MSI y el otro core no lo tiene *********   
+                     if(cp == 1){
+                        cache_blocksL2[i].state = EXCLUSIVE;}       // Pone el estado del dato en L2 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
+                  }
+             }
 
           //------------------------ Guarda el dato en L1-------------------------------
             for(int m = 0; m < associativity; m++){
@@ -265,6 +288,32 @@ int lru_L1_L2_replacement_policy (int idx,
                   operation_result_L2->evicted_addressL1 = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; 
                   cache_blocks[m].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                   cache_blocks[m].tag = tag;                      //-----tag nuevo guardado en el set----------
+               
+                  if (loadstore){
+                     cache_blocks[m].state = MODIFIED;  // Cambia el estado a MODIFIED en L1 ***********
+                     
+                     if (get_coherence_state(tag,associativity,Other_L1_Core[idx] != NONE_)){ // Si el otro procesador tiene el dato *******
+                        set_coherence_state(tag,associativity,Other_L1_Core[idx],INVALID);  // Invalida el dato si está en el otro core ******** 
+
+                        if(core){ operation_result_L2->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
+                        else{ operation_result_L2->Coherence_Inv_C2 +=1; }  
+                     
+                     } 
+                  }
+                     
+                  else {
+                     if(get_coherence_state(tag,associativity,Other_L1_Core[idx]) != NONE_){ // Si estoy leyendo y el otro core tiene el dato...*****
+                        set_coherence_state(tag,associativity,Other_L1_Core[idx],SHARED);   // Pongo el dato en el otro core como shared *********
+                        cache_blocks[m].state = SHARED;                                    // Cambia el estado a SHARED en L1*****
+                     }
+                     else{
+                        cache_blocks[m].state = SHARED;       // Pone el estado del dato en L1 en SHARED si es MSI y el otro core no lo tiene *********   
+                        if(cp == 1){
+                           cache_blocksL2[i].state = EXCLUSIVE;}       // Pone el estado del dato en L1 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
+                     }
+                  }
+                
+
 
                 //----------suma 1 a los valores de remplazo correspondientes ----------------
                   for(int j = 0; j < associativity; j++){  
@@ -282,7 +331,7 @@ int lru_L1_L2_replacement_policy (int idx,
 
       //------------------------------- Hubo un miss en L1 y en L2----------------------------------------------
       if(!hit_o_missL2){
-         operation_result_L2->MissL2 +=1;
+         operation_result_L2->Miss_L2 +=1;
 
          //----------------Guarda el nuevo valor en L2 ---------------------------
          for(int i = 0; i < associativityL2; i++){
@@ -299,16 +348,20 @@ int lru_L1_L2_replacement_policy (int idx,
                if(loadstore){
                // -----------si hubo miss store----------------
                   cache_blocksL2[i].dirty = true;    
-
-                  // Pone el estado en Modified       // <---------------------------- IMPORTANTE  
-                  // va a cambiar el estado a L1
+                  cache_blocksL2[i].state = MODIFIED; // Pone el estado en Modified ********** 
                }
-               // else {Pone el estado en Exclusive o en shared dependiendo del protocolo de coherencia
-                     // Va a cambiar el estado a L1}     // <---------------------------- IMPORTANTE
+               else {
+                     if(cp == 1){
+                        cache_blocksL2[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI ********** 
+                     }
+                     else{ 
+                        cache_blocksL2[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
+                     }
+               } 
          
                //----------suma 1 a los valores de remplazo correspondientes ----------------
                for(int j = 0; j < associativityL2; j++){  
-                  if(cache_blocksL2[j].rp_value < (associativityL2 - 1)){  cache_blocksL2[j].rp_value += 1;   }  
+                  if(cache_blocksL2[j].rp_value < (associativityL2 - 1)){  cache_blocksL2[j].rp_value += 1; }  
                }
                cache_blocksL2[i].rp_value = 0; //---- el dato que se ingreso/guardo con remplazo en 0-----
                i = associativityL2;            // ---- Termina el for ----
@@ -324,6 +377,34 @@ int lru_L1_L2_replacement_policy (int idx,
                cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                cache_blocks[i].tag = tag;                      //-----tag nuevo guardado en el set----------
                
+               // ------------------------Cambia el estado en L1 -----------------------------------
+
+               if(loadstore){
+               // -----------si hubo miss store----------------
+                  cache_blocks[i].dirty = true;    
+                  cache_blocks[i].state = MODIFIED; // Pone el estado en Modified ********** 
+
+                  if (get_coherence_state(tag,associativity,Other_L1_Core[idx] != NONE_)){ // Si el otro procesador tiene el dato *******
+                     set_coherence_state(tag,associativity,Other_L1_Core[idx],INVALID);  // shared el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
+                  } 
+               }
+               else {
+                     if(cp == 1){
+                        cache_blocks[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI ********** 
+                        if (get_coherence_state(tag,associativity,Other_L1_Core[idx] != NONE_)){ // Si el otro procesador tiene el dato *******
+                           set_coherence_state(tag,associativity,Other_L1_Core[idx],INVALID);  // Invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
+                        } 
+                     }
+                     else{ 
+                        cache_blocks[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
+
+                        if (get_coherence_state(tag,associativity,Other_L1_Core[idx] != NONE_)){ // Si el otro procesador tiene el dato *******
+                           set_coherence_state(tag,associativity,Other_L1_Core[idx],SHARED);  // shared el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
+                        } 
+                     }
+               } 
+
+
                //----------suma 1 a los valores de remplazo correspondientes ----------------
                for(int j = 0; j < associativity; j++){  
                   if(cache_blocks[j].rp_value < (associativity - 1)){  cache_blocks[j].rp_value += 1; }  
@@ -387,7 +468,7 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
             cout << "  Cache L2 Associativity: "<<"      " << associativity*2 << "\n";
             cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
-            cout << "  Coherence protocol                " << "\n";
+            cout << "  Coherence protocol                " << cp <<"\n";
             cout << "------------------------------------------\n";
             cout << "  Simulation results:\n";
             cout << "------------------------------------------\n";
@@ -408,7 +489,7 @@ coherence get_coherence_state (int tag,
 
    for (int i = 0; i < associativity; i++)
    {
-      if (cache_blocks[i].tag == tag & cache_blocks[i].valid == 0)   //-- Si se encuentra el dato y no esta valido
+      if (cache_blocks[i].tag == tag && cache_blocks[i].valid == 0)   //-- Si se encuentra el dato y no esta valido
       {
          return cache_blocks[i].state; //-- Retorna el estado si encontro el dato
       }
@@ -429,9 +510,8 @@ void set_coherence_state (int tag,
       if (cache_blocks[i].tag == tag)
       {
          cache_blocks[i].state = coherence_state; // Escribe el dato
+
+         if (coherence_state == INVALID){cache_blocks[i].valid= false;} // si el estado es invalido, se ivalida el dato
       }
    }
 }
-
-
-
