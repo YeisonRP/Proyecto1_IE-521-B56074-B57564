@@ -339,7 +339,7 @@ TEST(L1_L2, miss_hit){
   struct operation_result_L2 resultL1L2 = {};
 
   int randomTagL1;
-  bool C2_tiene_A = false; // 0 no lo tiene, 1 si
+  bool C2_tiene_A = rand()%2; // 0 no lo tiene, 1 si
 
 //-- LLenar el set de C1 y C2 si correspone, asegurando que el dato A no este en C1 y en C2 tal vez
   for (int j =  0; j < associativityL1; j++) {
@@ -474,7 +474,7 @@ TEST(L1_L2, miss_miss){
   struct operation_result_L2 resultL1L2 = {};
 
   int randomTagL1;
-  bool C2_tiene_A = false; // 0 no lo tiene, 1 si
+  bool C2_tiene_A = rand()%2; // 0 no lo tiene, 1 si
 
 //-- LLenar el set de C1 y C2 si correspone, asegurando que el dato no A este en C1 y en C2 tal vez,
   for (int j =  0; j < associativityL1; j++) {
@@ -525,8 +525,6 @@ TEST(L1_L2, miss_miss){
   //  funcion que hace todo
   lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL1,associativityL1,LS,C1_L1,C2_L1,cp,cacheL2,&resultL1L2,false,0);
 
-
-
   /*
     Checks
     Verificación 1: Si C2 tiene el dato:
@@ -544,18 +542,18 @@ TEST(L1_L2, miss_miss){
     {
       if (C2_tiene_A)  // Si C2 tiene el dato:
       {
-        if (C2_L1[i].tag == adress_AL1)
+        if (C2_L1[i].tag == adress_AL1 & C2_L1[i].valid)
         {
           EXPECT_EQ(C2_L1[i].state, SHARED);
         }
-        if (C1_L1[i].tag == adress_AL1)
+        if (C1_L1[i].tag == adress_AL1 &  C1_L1[i].valid)
         {
           EXPECT_EQ(C1_L1[i].state, SHARED);
         }
       }
       else // Si C2 no tiene el dato: 
       {
-        if (C1_L1[i].tag == adress_AL1)
+        if (C1_L1[i].tag == adress_AL1 &  C1_L1[i].valid)
         {
           EXPECT_EQ(C1_L1[i].state, EXCLUSIVE);
         }
@@ -569,18 +567,18 @@ TEST(L1_L2, miss_miss){
     {
       if (C2_tiene_A)  // Si C2 tiene el dato:
       {
-        if (C2_L1[i].tag == adress_AL1)
+        if (C2_L1[i].tag == adress_AL1  & C2_L1[i].valid)
         {
           EXPECT_EQ(C2_L1[i].state, INVALID);
         }
-        if (C1_L1[i].tag == adress_AL1)
+        if (C1_L1[i].tag == adress_AL1 &  C1_L1[i].valid)
         {
           EXPECT_EQ(C1_L1[i].state, MODIFIED);
         }
       }
       else // Si C2 no tiene el dato: 
       {
-        if (C1_L1[i].tag == adress_AL1)
+        if (C1_L1[i].tag == adress_AL1  & C1_L1[i].valid )
         {
           EXPECT_EQ(C1_L1[i].state, MODIFIED);
         }
