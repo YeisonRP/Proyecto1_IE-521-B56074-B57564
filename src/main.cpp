@@ -43,10 +43,10 @@ int main(int argc, char * argv []) {
     if(argv[i] == comandos[2]){ sizeBloqBytes = atoi(argv[i + 1]);  err++;  }
     if(argv[i] == comandos[3])
     {   
-      string coherence[3] = {"MSI","MESI"};
+      string coherence[2] = {"MSI","MESI"};
       if(argv[i + 1] == coherence[0]){ cp = 0; err++; }
       else if(argv[i + 1] == coherence[1]){ cp = 1; err++;  }
-            else{ opt = -1; } //Error    
+            else{ cp = -1; } //Error    
     }
   }
   //Verificando que se encontraran los datos necesarios
@@ -135,6 +135,9 @@ int main(int argc, char * argv []) {
   int dirty_eviction_counter = 0;
   bool valido = true;
   int IC_counter = 0;
+
+  // int INST_COUNTER = 0;  // Contador de instruccion
+
   while (valido){
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
@@ -154,6 +157,8 @@ int main(int argc, char * argv []) {
 
       // Cuenta las ciclos de las instrucciones
       IC_counter += IC;
+
+      //INST_COUNTER +=1;  // Aumenta la cuenta 
   
     // -----------------Se procesan los datos de la linea----------------------
 
@@ -163,8 +168,17 @@ int main(int argc, char * argv []) {
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address, *tag_sizeL2, *index_sizeL2, *offset_size, indexL2, tagL2); // REVISAR
 
-          // -----------------Se ingresa en la cache segun la optimizacion----------------------
-          if(opt == 2){   
+
+
+    //------------------ Se elije el procesador ----------------------------------
+        // bool CORE = false;         // false -> core1 /  true -> core2
+
+        //core = (INST_COUNTER % 4 == 0 )? false: true; 
+
+
+    // -----------------Se ingresa en la cache segun la optimizacion----------------------
+          
+        /*if(opt == 2){   
             status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
             if(status == ERROR){ cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
           }
@@ -174,7 +188,8 @@ int main(int argc, char * argv []) {
           }
           else if(opt == 0){
             comun_vc_L1(*tag,*index,*index_size,associativity,LS,vc,cache[*index],resultado_VC,resultado_L1_en_VC,misses,hits,VC_hits,dirty_evictions);
-          } 
+          } */
+
 
     // -----------------Se procesan los resultados de result ----------------------      
       

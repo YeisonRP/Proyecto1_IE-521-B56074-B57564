@@ -160,7 +160,7 @@ int lru_replacement_policy (int idx,
  * [in] opt: tipo de optimizacion con la que debe trabajar la politica
  * [in] loadstore: type of operation true if store false if load
  * [in] debug: if set to one debug information is printed
- *
+ * [in] cp: Define el protocolo de coherencia
  * [in/out] cache_block: return the cache operation return (miss_hit_status)
  * [out] result: result of the operation (returns_types)
  */
@@ -171,9 +171,13 @@ int lru_L1_L2_replacement_policy (int idx,
                            int associativity,
                            bool loadstore,
                            entry* cache_blocks,
+                           entry* Other_L1_Core,
+                           int cp, 
                            entry* cache_blocksL2,                           
                            operation_result_L2* operation_result_L2,
-                           bool debug=false);
+                           bool debug,
+                           bool core);
+
 
 
 /* 
