@@ -545,18 +545,20 @@ TEST(L1_L2, miss_miss){
       {
         if (C2_L1[i].tag == adress_AL1 & C2_L1[i].valid)
         {
-          EXPECT_EQ(C2_L1[i].state, SHARED);
+          EXPECT_EQ(C2_L1[i].state, INVALID);
         }
         if (C1_L1[i].tag == adress_AL1 &  C1_L1[i].valid)
         {
-          EXPECT_EQ(C1_L1[i].state, SHARED);
+          if(cp == 1) {EXPECT_EQ(C1_L1[i].state, EXCLUSIVE); }
+          if(cp == 0) {EXPECT_EQ(C1_L1[i].state, SHARED); }
         }
       }
       else // Si C2 no tiene el dato: 
       {
         if (C1_L1[i].tag == adress_AL1 &  C1_L1[i].valid)
         {
-          EXPECT_EQ(C1_L1[i].state, EXCLUSIVE);
+          if(cp == 1) {EXPECT_EQ(C1_L1[i].state, EXCLUSIVE); }
+          if(cp == 0) {EXPECT_EQ(C1_L1[i].state, SHARED); }
         }
       }    
     }

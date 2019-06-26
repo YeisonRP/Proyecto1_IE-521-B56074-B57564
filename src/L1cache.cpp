@@ -165,7 +165,7 @@ int lru_replacement_policy (int idx,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// Verificar hit hit que se cambie el dato en L2 si corresponde
 int lru_L1_L2_replacement_policy (int idx,
                            int tag,
                            int idxL2,
@@ -192,6 +192,19 @@ int lru_L1_L2_replacement_policy (int idx,
 
    bool hit_o_missL1 = false;
    bool hit_o_missL2 = false;
+
+// ------------------- Verificar si el otro core tiene el dato ------------------------
+   bool otro_core_tiene_el_dato;
+   if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_)
+   {
+      otro_core_tiene_el_dato = true;
+   }
+   else
+   {
+      otro_core_tiene_el_dato = false;
+   }
+   
+   
 //------------------------------ Verificar Si es Hit en L1-----------------------------
    for(int i = 0; i < associativity; i++)
    {
@@ -227,6 +240,8 @@ int lru_L1_L2_replacement_policy (int idx,
                }
             }
          }
+
+         
 
 // YEISON~~~~~~~~~~~~~~~~~~~~~~~~
    /////////////////////////////////////////////////////////////SERA QUE ESTO HAY QUE HACERLO?
@@ -274,7 +289,7 @@ int lru_L1_L2_replacement_policy (int idx,
             }
              else{ //-------------Si es un hit load en L2 -----------------------
                   
-                  if(get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro core lo tiene pasa a shared******** // if(get_coherence_state(tag,associativity,Other_L1_Core[idx]) != NONE_){ 
+                  if(otro_core_tiene_el_dato){ // Si el otro core lo tiene pasa a shared******** // if(get_coherence_state(tag,associativity,Other_L1_Core[idx]) != NONE_){ 
                      cache_blocksL2[i].state = SHARED;       // Pone el estado del dato en L2 en SHARED *********   
                   }
                   else{
@@ -297,7 +312,7 @@ int lru_L1_L2_replacement_policy (int idx,
                   if (loadstore){   //STORE
                      cache_blocks[m].state = MODIFIED;  // Cambia el estado a MODIFIED en L1 ***********
                      
-                     if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
+                     if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
                         set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // Invalida el dato si está en el otro core ******** 
                         //cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                         if(core){ operation_result_L2->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
@@ -307,7 +322,7 @@ int lru_L1_L2_replacement_policy (int idx,
                   }
                      
                   else { // LOAD
-                     if(get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si estoy leyendo y el otro core tiene el dato...*****
+                     if(otro_core_tiene_el_dato){ // Si estoy leyendo y el otro core tiene el dato...*****
                         set_coherence_state(tag,associativity,Other_L1_Core,SHARED);   // Pongo el dato en el otro core como shared *********
                        // cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                         cache_blocks[m].state = SHARED;                                    // Cambia el estado a SHARED en L1*****
@@ -357,9 +372,9 @@ int lru_L1_L2_replacement_policy (int idx,
                   cache_blocksL2[i].dirty = true;    
                   cache_blocksL2[i].state = MODIFIED; // Pone el estado en Modified ********** 
                }
-               else {
-                     if(cp == 1){
-                        cache_blocksL2[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI ********** 
+               else { // -----------si hubo miss load----------------
+                     if(cp == 1){   // si es MESI
+                         cache_blocksL2[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI **********     
                      }
                      else{ 
                         cache_blocksL2[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
@@ -391,15 +406,16 @@ int lru_L1_L2_replacement_policy (int idx,
                   cache_blocks[i].dirty = true;    
                   cache_blocks[i].state = MODIFIED; // Pone el estado en Modified ********** 
 
-                  if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
+                  if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
                     // cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                      set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // shared el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                   } 
                }
                else {
+                  // -----------si hubo miss load----------------
                      if(cp == 1){
-                        cache_blocks[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI ********** 
-                        if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
+                        cache_blocks[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI********** 
+                        if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
                         //   cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                            set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // Invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                         } 
@@ -407,8 +423,7 @@ int lru_L1_L2_replacement_policy (int idx,
                      else{ 
                         cache_blocks[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
 
-                        if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
-                        //   cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
+                        if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
                            set_coherence_state(tag,associativity,Other_L1_Core,INVALID);   // invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                         } 
                      }
