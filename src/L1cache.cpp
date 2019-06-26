@@ -400,7 +400,7 @@ int lru_L1_L2_replacement_policy (int idx,
                         cache_blocks[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
 
                         if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
-                           set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
+                           set_coherence_state(tag,associativity,Other_L1_Core,INVALID);   // invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                         } 
                      }
                } 
@@ -450,16 +450,22 @@ entry** creando_matriz_cache  (int idx_size,
    return cache_matrix;
 }
       
-void simulation_outL2( int cache_size_kb, 
-                     int associativity, 
-                     int block_size,  
-                     int cp, 
-                     operation_result_L2* L2)
+void simulation_outL2(  int cache_size_kb, 
+                        int associativity, 
+                        int block_size,  
+                        int cp, 
+                        operation_result_L2* L2)
    {
-/*     double L1MR = (double)L2->MissL1/double(L2->MissL1+L2->HitL1);
-      double L2MR = (double)L2->MissL2/double(L2->MissL2+L2->HitL2);
-      double GMR = L1MR*L2MR;
-      double OMR = double(L2->MissL1+L2->MissL2)/double(L2->MissL1+L2->HitL1);
+      double C1L1MR = (double)L2->Miss_L1_C1/double(L2->Miss_L1_C1+L2->Hit_L1_C1);
+      double C2L1MR = (double)L2->Miss_L1_C2/double(L2->Miss_L1_C2+L2->Hit_L1_C2);
+      //double OMR = double(L2->MissL1+L2->MissL2)/double(L2->MissL1+L2->HitL1);
+      string CoherenceProtocol;
+      if(cp == 1){ 
+         CoherenceProtocol = "MESI"; 
+      }
+      else {
+         CoherenceProtocol = "MSI";
+      }
 
       cout << "------------------------------------------\n";
             cout << "  Cache parameters:\n";
@@ -469,17 +475,17 @@ void simulation_outL2( int cache_size_kb,
             cout << "  Cache L1 Associativity: "<<"      " << associativity << "\n";
             cout << "  Cache L2 Associativity: "<<"      " << associativity*2 << "\n";
             cout << "  Cache Block Size (bytes):"<<"     " << block_size << "\n";
-            cout << "  Coherence protocol                " << cp <<"\n";
+            cout << "  Coherence protocol                " << CoherenceProtocol <<"\n";
             cout << "------------------------------------------\n";
             cout << "  Simulation results:\n";
             cout << "------------------------------------------\n";
-            cout << "  Overall miss rate"<<"               " << OMR <<"\n";
-            cout << "  CPU1 L1 miss rate:"<<"              " << L1MR <<"\n";
-            cout << "  CPU2 L2 miss rate:"<<"              " << L2MR<<"\n";
-            cout << "  Coherence Invalidation CPU1"<<"     " << GMR <<"\n";
-            cout << "  Coherence Invalidation CPU2"<<"     " << GMR <<"\n";
+            //cout << "  Overall miss rate"<<"               " << OMR <<"\n";
+            cout << "  CPU1 L1 miss rate:"<<"              " << C1L1MR <<"\n";
+            cout << "  CPU2 L1 miss rate:"<<"              " << C2L1MR<<"\n";
+            cout << "  Coherence Invalidation CPU1"<<"     " << L2->Coherence_Inv_C1 <<"\n";
+            cout << "  Coherence Invalidation CPU2"<<"     " << L2->Coherence_Inv_C2 <<"\n";
             cout << "------------------------------------------\n";
-    */ }       
+     }       
 
 
 //-- PROBADA
