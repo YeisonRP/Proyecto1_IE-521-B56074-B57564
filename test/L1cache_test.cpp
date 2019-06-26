@@ -265,6 +265,237 @@ TEST(MESI, ESTADO_E){
 
 
 
+TEST(L1_L2, miss_hit){
+
+  int associativityL1, associativityL2;
+  int adress_AL1;
+
+//--    1. Choose a random associativity    
+  associativityL1 = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  associativityL2 = associativityL1 << 1;
+
+//--    2. Choose a random opt  
+  int cp = rand()%2;
+
+//-- Choose a random address (AddressA)    
+  adress_AL1 = rand()%4096; // tag random
+
+  struct entry C1_L1[associativityL1];  // Set de L1
+  struct entry C2_L1[associativityL1];  // Set de L2
+  struct entry cacheL2[associativityL2];  //Set de L2
+  struct operation_result_L2 resultL1L2 = {};
+
+  int randomTagL1;
+  bool C2_tiene_A = rand()%2; // 0 no lo tiene, 1 si
+
+//-- LLenar el set de C1 y C2 si correspone, asegurando que el dato A este en C1 y en C2 tal vez, ambos en estado S
+  for (int j =  0; j < associativityL1; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      C1_L1[j].valid = true;
+      C1_L1[j].tag = randomTagL1;                               // Llenando L1
+      C1_L1[j].dirty = 0;
+      C1_L1[j].rp_value = associativityL1-1-j;
+
+      C2_L1[j].valid = true;
+      C2_L1[j].tag = randomTagL1;                               // Llenando L1
+      C2_L1[j].dirty = 0;
+      C2_L1[j].rp_value = associativityL1-1-j;
+      if(j == 0) // Guarda el valor del tag A en L1 para forzar un hit
+      {
+        if(C2_tiene_A)
+        {
+          C2_L1[j].tag = adress_AL1; 
+          C2_L1[j].state = SHARED;
+        } 
+      }   
+    }  
+
+  for (int j =  0; j < associativityL2; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      cacheL2[j].valid = true;
+      cacheL2[j].tag = randomTagL1;                               // Llenando L1
+      cacheL2[j].dirty = 0;
+      cacheL2[j].rp_value = associativityL2-1-j;
+
+      if(j == 0) // Guarda el valor del tag A en L1 para forzar un hit
+      {
+        cacheL2[j].tag = adress_AL1;
+        cacheL2[j].state = SHARED;
+      }   
+    }  
+
+
+  // Forzar un read o write
+  bool LS = rand()%2;                               // Escritura o lectura Random
+
+  int miss_C1 = resultL1L2.Miss_L1_C1;
+  int hit_L2 = resultL1L2.Hit_L2;
+  int CI_C2 = resultL1L2.Coherence_Inv_C2;
+  //debug
+  cout << "cp = " << cp << ".   LS= "  << LS << "   DATO EN C2? = " << C2_tiene_A << "   asociatividad = " << associativityL1 << endl;
+  lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL1,associativityL1,LS,C1_L1,C2_L1,cp,cacheL2,&resultL1L2,false,0);
+
+  ////-- CHECKS
+  EXPECT_EQ( resultL1L2.Hit_L2, hit_L2 + 1);
+  EXPECT_EQ( resultL1L2.Miss_L1_C1, miss_C1 + 1);
+  if (!LS) // read
+  {
+    for (int i = 0; i < associativityL1; i++)
+    {
+      if (C1_L1[i].tag == adress_AL1)
+      {
+        EXPECT_EQ(C1_L1[i].state, SHARED);
+      }
+      if (C2_tiene_A) // Si el dato esta en C2
+      {
+        if (C2_L1[i].tag == adress_AL1)
+        {
+          EXPECT_EQ(C2_L1[i].state, SHARED);
+        }
+      }    
+    }
+  }
+  if (LS) // WRITE
+  {
+    for (int i = 0; i < associativityL1; i++)
+    {
+      if (C1_L1[i].tag == adress_AL1)
+      {
+        EXPECT_EQ(C1_L1[i].state, MODIFIED);
+      }
+      if (C2_tiene_A) // Si el dato esta en C2
+      {
+        if (C2_L1[i].tag == adress_AL1)
+        {
+          EXPECT_EQ(C2_L1[i].state, INVALID);
+          EXPECT_EQ(resultL1L2.Coherence_Inv_C2, CI_C2 + 1);
+        }
+      }    
+    }
+  }
+ 
+}
+
+
+
+TEST(L1_L2, miss_miss){
+
+  int associativityL1, associativityL2;
+  int adress_AL1;
+
+//--    1. Choose a random associativity    
+  associativityL1 = 1 << (rand()%4);  // associativity puede ser 1, 2 , 4, 8 
+  associativityL2 = associativityL1 << 1;
+
+//--    2. Choose a random opt  
+  int cp = rand()%2;
+
+//-- Choose a random address (AddressA)    
+  adress_AL1 = rand()%4096; // tag random
+
+  struct entry C1_L1[associativityL1];  // Set de L1
+  struct entry C2_L1[associativityL1];  // Set de L2
+  struct entry cacheL2[associativityL2];  //Set de L2
+  struct operation_result_L2 resultL1L2 = {};
+
+  int randomTagL1;
+  bool C2_tiene_A = rand()%2; // 0 no lo tiene, 1 si
+
+//-- LLenar el set de C1 y C2 si correspone, asegurando que el dato A este en C1 y en C2 tal vez, ambos en estado S
+  for (int j =  0; j < associativityL1; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      C1_L1[j].valid = true;
+      C1_L1[j].tag = randomTagL1;                               // Llenando L1
+      C1_L1[j].dirty = 0;
+      C1_L1[j].rp_value = associativityL1-1-j;
+
+      C2_L1[j].valid = true;
+      C2_L1[j].tag = randomTagL1;                               // Llenando L1
+      C2_L1[j].dirty = 0;
+      C2_L1[j].rp_value = associativityL1-1-j;
+      if(j == 0) // Guarda el valor del tag A en L1 para forzar un hit
+      {
+        if(C2_tiene_A)
+        {
+          C2_L1[j].tag = adress_AL1; 
+          C2_L1[j].state = SHARED;
+        } 
+      }   
+    }  
+
+  for (int j =  0; j < associativityL2; j++) {
+
+      do{randomTagL1 = rand()%4096; }
+      while(randomTagL1 == adress_AL1);
+
+      cacheL2[j].valid = true;
+      cacheL2[j].tag = randomTagL1;                               // Llenando L1
+      cacheL2[j].dirty = 0;
+      cacheL2[j].rp_value = associativityL2-1-j;
+    }  
+
+
+  // Forzar un read o write
+  bool LS = rand()%2;                               // Escritura o lectura Random
+
+  int miss_C1 = resultL1L2.Miss_L1_C1;
+  int miss_L2 = resultL1L2.Miss_L2;
+  int CI_C2 = resultL1L2.Coherence_Inv_C2;
+  //debug
+  cout << "cp = " << cp << ".   LS= "  << LS << "   DATO EN C2? = " << C2_tiene_A << "   asociatividad = " << associativityL1 << endl;
+  lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL1,associativityL1,LS,C1_L1,C2_L1,cp,cacheL2,&resultL1L2,false,0);
+
+  ////-- CHECKS
+  EXPECT_EQ( resultL1L2.Miss_L2, miss_L2 + 1);
+  EXPECT_EQ( resultL1L2.Miss_L1_C1, miss_C1 + 1);
+  if (!LS) // read
+  {
+    for (int i = 0; i < associativityL1; i++)
+    {
+      if (C1_L1[i].tag == adress_AL1)
+      {
+        EXPECT_EQ(C1_L1[i].state, SHARED);
+      }
+      if (C2_tiene_A) // Si el dato esta en C2
+      {
+        if (C2_L1[i].tag == adress_AL1)
+        {
+          EXPECT_EQ(C2_L1[i].state, SHARED);
+        }
+      }    
+    }
+  }
+  if (LS) // WRITE
+  {
+    for (int i = 0; i < associativityL1; i++)
+    {
+      if (C1_L1[i].tag == adress_AL1)
+      {
+        EXPECT_EQ(C1_L1[i].state, MODIFIED);
+      }
+      if (C2_tiene_A) // Si el dato esta en C2
+      {
+        if (C2_L1[i].tag == adress_AL1)
+        {
+          EXPECT_EQ(C2_L1[i].state, INVALID);
+          EXPECT_EQ(resultL1L2.Coherence_Inv_C2, CI_C2 + 1);
+        }
+      }    
+    }
+  }
+ 
+}
+
+
 /* 
  * Gtest main function: Generates random seed, if not provided,
  * parses DEBUG flag, and execute the test suite
