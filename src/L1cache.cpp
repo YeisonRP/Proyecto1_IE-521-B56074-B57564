@@ -276,7 +276,8 @@ int lru_L1_L2_replacement_policy (int idx,
                   else{
                      cache_blocksL2[i].state = SHARED;       // Pone el estado del dato en L2 en SHARED si es MSI y el otro core no lo tiene *********   
                      if(cp == 1){
-                        cache_blocksL2[i].state = EXCLUSIVE;}       // Pone el estado del dato en L2 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
+                        cache_blocksL2[i].state = EXCLUSIVE; // Pone el estado del dato en L2 en EXCLUSIVE si es MESI y el otro core no tiene el dato ********* 
+                     }         
                   }
              }
 
@@ -399,7 +400,7 @@ int lru_L1_L2_replacement_policy (int idx,
                         cache_blocks[i].state = SHARED; // Pone el estado en SHARED si es MSI ********** 
 
                         if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
-                           set_coherence_state(tag,associativity,Other_L1_Core,SHARED);  // shared el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
+                           set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                         } 
                      }
                } 
