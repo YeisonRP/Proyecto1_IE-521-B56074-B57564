@@ -67,10 +67,7 @@ int main(int argc, char * argv []) {
   int * index_size = new int;     //tamano del index
   int * index_sizeL2 = new int;     //tamano del index
   int * offset_size = new int;    //tamano del offset
-  int * misses = new int;                   // miss opt VC
-  int * hits = new int;                     // hits opt VC
-  int * VC_hits = new int;                  // VC_hits opt VC
-  int * dirty_evictions = new int;          // dirty_evictions opt VC
+
 
   // Verificando los tamanos de tag index y offset
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
@@ -95,15 +92,14 @@ int main(int argc, char * argv []) {
   int * cantidad_sets = new int;    //Cantidad de sets de la cache
 
   // Creando la matriz de la cache, donde las filas son los set y las columnas las vias
-  entry ** cache = creando_matriz_cache(*index_size,associativity,cantidad_sets);
-
+  entry ** C1_L1 = creando_matriz_cache(*index_size,associativity,cantidad_sets);
+  entry ** C2_L1 = creando_matriz_cache(*index_size,associativity,cantidad_sets);
   //----------Creando la matriz de la cache L2, si se elige esta optimizacion-----------
   entry ** cacheL2 = creando_matriz_cache(*index_sizeL2,associativity*2,cantidad_sets); 
                                                     // Associativity *2 porque tiene el doble de vías
 
   ////----------------- creando el victim cache -----------------------------------------
-  entry * vc;
-  vc = creando_victim_cache();
+
 
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
 
@@ -113,28 +109,15 @@ int main(int argc, char * argv []) {
   char data [8];
   int *tag = new int;
   int *index = new int;
-  struct operation_result result = {};
-  operation_result_vc* resultado_VC = new operation_result_vc;
-  operation_result* resultado_L1_en_VC = new operation_result;
-  // ------------------------------- Si se elige la optimizacion de L2 ------------------------------
-  
+  struct operation_result_L2 result = {0,0,0,0,0,0,0,0,0,0,0};
+
   int *tagL2 = new int;
   int *indexL2 = new int;
-  struct operation_result_L2 resultL1L2 = {};
-  resultL1L2.HitL1 = 0;
-  resultL1L2.HitL2 = 0;
-  resultL1L2.MissL1 = 0;
-  resultL1L2.MissL2 = 0;
 
-  int miss_hit_counter[4] = {0,0,0,0}; //Contador de hits y miss 
-  // miss_hit_counter[0]  = MISS_LOAD
-  // miss_hit_counter[1]  = MISS_STORE
-  // miss_hit_counter[2]  = HIT_LOAD
-  // miss_hit_counter[3]  = HIT_STORE
-  
-  int dirty_eviction_counter = 0;
   bool valido = true;
   int IC_counter = 0;
+  int access_counter = 0;
+  int access_number = 0;
 
   // int INST_COUNTER = 0;  // Contador de instruccion
 
@@ -157,7 +140,8 @@ int main(int argc, char * argv []) {
 
       // Cuenta las ciclos de las instrucciones
       IC_counter += IC;
-
+      access_number = access_counter % 4;
+      access_counter += 1;
       //INST_COUNTER +=1;  // Aumenta la cuenta 
   
     // -----------------Se procesan los datos de la linea----------------------
@@ -168,79 +152,35 @@ int main(int argc, char * argv []) {
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address, *tag_sizeL2, *index_sizeL2, *offset_size, indexL2, tagL2); // REVISAR
 
-
-
-    //------------------ Se elije el procesador ----------------------------------
-        // bool CORE = false;         // false -> core1 /  true -> core2
-
-        //core = (INST_COUNTER % 4 == 0 )? false: true; 
-
-
-    // -----------------Se ingresa en la cache segun la optimizacion----------------------
-          
-        /*if(opt == 2){   
-            status = lru_replacement_policy(*index, *tag, associativity, LS, cache[*index],&result, 0);
-            if(status == ERROR){ cout << "Se presento un error en la funcion lru_replacement_policy\n" << endl; return 0;  }
-          }
-          else if(opt== 1){   
-            status = lru_L1_L2_replacement_policy(*index, *tag,*indexL2,*tagL2, associativity, LS, cache[*index],cacheL2[*indexL2],&resultL1L2,0);
-            if(status == ERROR){  cout << "Se presento un error en la funcion lru_L1_L2_replacement_policy\n" << endl; return 0;  }
-          }
-          else if(opt == 0){
-            comun_vc_L1(*tag,*index,*index_size,associativity,LS,vc,cache[*index],resultado_VC,resultado_L1_en_VC,misses,hits,VC_hits,dirty_evictions);
-          } */
-
-
-    // -----------------Se procesan los resultados de result ----------------------      
-      
-      miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
-      if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
+      // Eligiendo el CORE
+      if (access_number == 0) // C1
+      {
+        lru_L1_L2_replacement_policy(*index,*tag,*indexL2,*tagL2,associativity,LS,C1_L1[*index],C2_L1[*index],cp,cacheL2[*indexL2],&result,false,0);
+      }
+      else  // C2
+      {
+        lru_L1_L2_replacement_policy(*index,*tag,*indexL2,*tagL2,associativity,LS,C2_L1[*index],C1_L1[*index],cp,cacheL2[*indexL2],&result,false,1);
+      }
     }
   }
 
-  switch (opt)
-  {
-  case NONE:
-    simulation_out(sizeCacheKB,associativity,sizeBloqBytes,miss_hit_counter[0]+miss_hit_counter[1],miss_hit_counter[2]+miss_hit_counter[3],dirty_eviction_counter,*VC_hits,opt);
-    break;
-
-  case L2:
-    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,&resultL1L2);
-    break;
-
-  case VC:
-    simulation_out(sizeCacheKB,associativity,sizeBloqBytes,*misses,*hits,*dirty_evictions,*VC_hits,opt);
-    break;
-
-  default:
-    cout << "error" << endl;
-    break;
-  }
-
-  // -----------------Se analizan los resultados finales  ---------------------- 
-
-      //double total_miss = (double)miss_hit_counter[0]+ (double)miss_hit_counter[1];
-      //double total_data = total_miss + (double)miss_hit_counter[2] + (double)miss_hit_counter[3];
-      //double miss_rate = total_miss/total_data;
-      //double read_miss_rate = (double)miss_hit_counter[0]/total_data;
 
 
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
-  //simulation_out(sizeCacheKB,associativity,sizeBloqBytes,opt,miss_rate,read_miss_rate,dirty_eviction_counter,miss_hit_counter[0],miss_hit_counter[1],miss_hit_counter[2],miss_hit_counter[3]);
+    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,cp, &result);
     
-    
-
+cout << "CP" << cp << endl;
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
   // Liberando memoria del arreglo de la cache
 
-  delete[] vc;
-  delete[] cache;
+  delete[] C1_L1;
+  delete[] C2_L1;
   delete[] cacheL2;
 
   // Liberando memoria de las demas variables
-  delete tag_size, index_size, offset_size, cantidad_sets, tag, index, resultado_L1_en_VC ,resultado_VC, misses, hits, VC_hits, dirty_evictions;
+  delete tag_size, index_size, offset_size, cantidad_sets, tag, index;
 
    //--------------------- Termina el conteo de tiempo y se calcula el tiempo de ejecucion---------------------
 

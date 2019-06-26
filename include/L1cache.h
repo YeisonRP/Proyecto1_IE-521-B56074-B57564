@@ -198,11 +198,11 @@ entry** creando_matriz_cache  (int idx_size,
 
 
 
-void simulation_outL2( int cache_size_kb, 
-                       int associativity,  
-                       int block_size,   
-                       operation_result_L2* L2
-                       );
+void simulation_outL2(  int cache_size_kb, 
+                        int associativity, 
+                        int block_size,  
+                        int cp, 
+                        operation_result_L2* L2);
 
 
 /* 
