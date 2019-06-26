@@ -411,7 +411,8 @@ TEST(L1_L2, miss_hit){
     {
       if (C1_L1[i].tag == adress_AL1)
       {
-        EXPECT_EQ(C1_L1[i].state, SHARED);
+          if (C2_tiene_A){EXPECT_EQ(C1_L1[i].state, SHARED); }
+          if (!C2_tiene_A & cp){EXPECT_EQ(C1_L1[i].state, EXCLUSIVE); }
       }
       if (C2_tiene_A) // Si el dato esta en C2
       {

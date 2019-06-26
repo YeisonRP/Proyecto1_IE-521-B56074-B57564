@@ -220,28 +220,30 @@ int lru_L1_L2_replacement_policy (int idx,
             else{ operation_result_L2->Coherence_Inv_C2 +=1; }   
 
             for(int a = 0; a < associativityL2; a++){
-               if(cache_blocksL2[a].tag == tagL2){
+               if(cache_blocksL2[a].tag == tagL2){        // SI el dato esta en L2
                   cache_blocksL2[a].state =  MODIFIED;    // Cambia el estado del dato en L2 como Modified *******
                   cache_blocksL2[a].dirty = true;
                   a = associativityL2;
                }
             }
          }
-         
 
-         // -----------Actualizando el valor de reemplazo en L2                            
-            for(int i = 0; i < associativityL2; i++){
-               if(cache_blocksL2[i].tag == tagL2 && cache_blocksL2[i].valid){  
+// YEISON~~~~~~~~~~~~~~~~~~~~~~~~
+   /////////////////////////////////////////////////////////////SERA QUE ESTO HAY QUE HACERLO?
+ /*     // -----------Actualizando el valor de reemplazo en L2                            
+            for(int x = 0; x < associativityL2; x++){
+               if(cache_blocksL2[x].tag == tagL2 && cache_blocksL2[x].valid){  
                   for(int j = 0; j < associativityL2; j++){
-                     if(cache_blocksL2[j].rp_value < (cache_blocksL2[i].rp_value)){  cache_blocksL2[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
+                     if(cache_blocksL2[j].rp_value < (cache_blocksL2[x].rp_value)){  cache_blocksL2[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
                   }                           
-                  cache_blocksL2[i].rp_value = 0;  
-                  i = associativityL2;     
+                  cache_blocksL2[x].rp_value = 0;  
+                  x = associativityL2;     
                }
             }
-         //------------Terminando el for-----------
+             */  
+         //------------Terminando el for----------- 
          i = associativity;
-      }
+      } 
    }
 //------------------------------ Se encontro que es un miss en L1 -----------------------------
    if(!hit_o_missL1){
@@ -267,6 +269,8 @@ int lru_L1_L2_replacement_policy (int idx,
                cache_blocksL2[i].state = MODIFIED;       // Pone el estado en Modified *********
 
                cache_blocksL2[i].dirty = true; 
+
+               // Revisar si el otro core lo tiene y ponerlo invalido
             }
              else{ //-------------Si es un hit load en L2 -----------------------
                   
@@ -290,7 +294,7 @@ int lru_L1_L2_replacement_policy (int idx,
                   cache_blocks[m].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                   cache_blocks[m].tag = tag;                      //-----tag nuevo guardado en el set----------
                
-                  if (loadstore){
+                  if (loadstore){   //STORE
                      cache_blocks[m].state = MODIFIED;  // Cambia el estado a MODIFIED en L1 ***********
                      
                      if (get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si el otro procesador tiene el dato *******
@@ -302,16 +306,17 @@ int lru_L1_L2_replacement_policy (int idx,
                      } 
                   }
                      
-                  else {
+                  else { // LOAD
                      if(get_coherence_state(tag,associativity,Other_L1_Core) != NONE_){ // Si estoy leyendo y el otro core tiene el dato...*****
                         set_coherence_state(tag,associativity,Other_L1_Core,SHARED);   // Pongo el dato en el otro core como shared *********
                        // cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                         cache_blocks[m].state = SHARED;                                    // Cambia el estado a SHARED en L1*****
                      }
-                     else{
+                     else{ 
                         cache_blocks[m].state = SHARED;       // Pone el estado del dato en L1 en SHARED si es MSI y el otro core no lo tiene *********   
                         if(cp == 1){
-                           cache_blocksL2[i].state = EXCLUSIVE;}       // Pone el estado del dato en L1 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
+                           //YEISON~~~~~~~~~~~~~~ 
+                           cache_blocks[m].state = EXCLUSIVE;}      // Pone el estado del dato en L1 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
                      }
                   }
                 
