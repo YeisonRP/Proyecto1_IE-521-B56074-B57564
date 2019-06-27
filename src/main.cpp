@@ -251,7 +251,7 @@ int main(int argc, char * argv []) {
         }  */
     }
 
-    else
+    if(stop == 3)
     {
       for (int i = 0; i < stop; i++)
       {
