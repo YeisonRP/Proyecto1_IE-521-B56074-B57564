@@ -73,11 +73,8 @@ int main(int argc, char * argv []) {
   status = field_size_get(sizeCacheKB,associativity,sizeBloqBytes,tag_size,index_size,offset_size);
   
   statusL2 = field_size_get(sizeCacheKB*4,associativity*2,sizeBloqBytes,tag_sizeL2,index_sizeL2,offset_size);
-  /*
-  cout << "Tag L1 "<< *tag_size<< endl;
-  cout << "Tag L2 "<< *tag_sizeL2<< endl;
-  cout << "Index L1 "<< *index_size<< endl;
-  cout << "Index L2 "<< *index_sizeL2<< endl;*/
+  
+     
   if(status == ERROR || statusL2 == ERROR)
   { 
     cout << "\nSe presento un error en la funcion field_size_get()" << endl;
@@ -130,14 +127,25 @@ int main(int argc, char * argv []) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-  int it_num = 0;
+ int x = 0;
   while (valido){
+    x +=1;
+    if (x == 100)
+    {
+      valido = false;
+    }
+    
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
     for (int i = 0 ; i < NUM_THREADS ; i++)
     {
       cin >> data;
-      if(data[0] != 35){ valido = false; i = NUM_THREADS; stop = i; }  // si no es un # se acaba la simulacion  
+      if(data[0] != 35)   // si no es un # se acaba la simulacion
+      {  
+        valido = false; 
+        stop = i; 
+        i = NUM_THREADS; 
+      }  
       else 
       {
         // Lee si si es load o store 
@@ -208,8 +216,7 @@ int main(int argc, char * argv []) {
     }
 
 
-    it_num +=1;
-    cout << it_num << endl;
+
 
 
     // Si todos los sets son independientes
@@ -256,13 +263,7 @@ int main(int argc, char * argv []) {
       for (int i = 0; i < stop; i++)
       {
         lru_L1_L2_replacement_policy(void_pointer[i]);
-      }
-      if (it_num == 1735963)
-      {
-        simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,cp, &result);
-      }
-      
-      
+      }      
     }
   }
 
@@ -270,7 +271,7 @@ int main(int argc, char * argv []) {
 
 
 
-
+  simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,cp, &result);
 
 
 
