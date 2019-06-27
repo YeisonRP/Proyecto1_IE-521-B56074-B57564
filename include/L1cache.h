@@ -80,10 +80,7 @@ struct operation_result_L2 {
  int  evicted_addressL1;
  int  evicted_addressL2;
 };
-//////////////////////////////////////////////////
 
-
-//////////////////////////////////////////////////
 
 /* 
  *  Functions
@@ -126,27 +123,6 @@ void address_tag_idx_get(long address,
                          int *tag);
 
 
-/* 
- * Search for an address in a cache set and
- * replaces blocks using LRU policy
- * 
- * [in] idx: index field of the block
- * [in] tag: tag field of the block
- * [in] associativity: number of ways of the entry
- * [in] opt: tipo de optimizacion con la que debe trabajar la politica
- * [in] loadstore: type of operation true if store false if load
- * [in] debug: if set to one debug information is printed
- *
- * [in/out] cache_block: return the cache operation return (miss_hit_status)
- * [out] result: result of the operation (returns_types)
- */
-int lru_replacement_policy (int idx,
-                           int tag,
-                           int associativity,
-                           bool loadstore,
-                           entry* cache_blocks,
-                           operation_result* operation_result,
-                           bool debug=false);
 
 
 
@@ -156,27 +132,30 @@ int lru_replacement_policy (int idx,
  * 
  * [in] idx: index field of the block
  * [in] tag: tag field of the block
+ * [in] idxL2: index field of the block in L2
+ * [in] tagL2: tag field of the block in L2
  * [in] associativity: number of ways of the entry
- * [in] opt: tipo de optimizacion con la que debe trabajar la politica
+ * [in] cp: Tipo de protocolo de coherencia, 0 MSI, 1 MESI
  * [in] loadstore: type of operation true if store false if load
  * [in] debug: if set to one debug information is printed
- * [in] cp: Define el protocolo de coherencia
- * [in/out] cache_block: return the cache operation return (miss_hit_status)
+ * [in/out] cache_block: Set of the cache L1C1
+ * [in/out] Other_L1_Core: Set of the cache L1C2
+ * [in/out] cache_blocksL2: Set of the cache L2
  * [out] result: result of the operation (returns_types)
  */
 int lru_L1_L2_replacement_policy (int idx,
-                           int tag,
-                           int idxL2,
-                           int tagL2,
-                           int associativity,
-                           bool loadstore,
-                           entry* cache_blocks,
-                           entry* Other_L1_Core,
-                           int cp, 
-                           entry* cache_blocksL2,                           
-                           operation_result_L2* operation_result_L2,
-                           bool debug,
-                           bool core);
+                                  int tag,
+                                  int idxL2,
+                                  int tagL2,
+                                  int associativity,
+                                  bool loadstore,
+                                  entry* cache_blocks,
+                                  entry* Other_L1_Core,
+                                  int cp, 
+                                  entry* cache_blocksL2,                           
+                                  operation_result_L2* operation_result_L2_,
+                                  bool debug,
+                                  bool core);
 
 
 
@@ -197,7 +176,14 @@ entry** creando_matriz_cache  (int idx_size,
 
 
 
-
+/*
+ * Imprime los resultados 
+ * [in] cache_size_kb: Tamano de la cache
+ * [in] associativity: Asociatividad
+ * [in] block_size: Tamano del bloque
+ * [in] cp: Protocolo de coherencia
+ * [in] L2: Resultados totales
+ */
 void simulation_outL2(  int cache_size_kb, 
                         int associativity, 
                         int block_size,  
@@ -234,15 +220,6 @@ void set_coherence_state (int tag,
                           entry* cache_blocks,
                           coherence coherence_state);
 
-
-
-void insert_LRU_data_in_cache_set(int idx,
-                                  int tag,
-                                  int associativity,
-                                  bool loadstore,
-                                  entry* cache_blocks,
-                                  operation_result* operation_result
-);
 
 
 void MESI(  int idx,

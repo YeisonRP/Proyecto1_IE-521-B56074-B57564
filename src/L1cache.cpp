@@ -74,111 +74,20 @@ void address_tag_idx_get(long address,
 }
 
 
-///////////////////////////////////////////// NO SE USA ///////////////////////////////////////////////////////////////
-
-// TESTEADA
-int lru_replacement_policy (int idx,
-                             int tag,
-                             int associativity,
-                             bool loadstore,
-                             entry* cache_blocks,  // set de la cache
-                             operation_result* result,
-                             bool debug)
-{
-//------------------------------ Verificar si tag e index son validos -----------------------------
-   if (idx < 0 || tag < 0 ) {    return ERROR;   }
-
-//------------------------------ Verificar si asociatividad es valido -----------------------------
-   double associativity_double = log2((double)associativity); 
-   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
-     
-
-   result->evicted_block = false;      //--- se asume que no salio ningun bloque
-   bool hit_o_miss = false;
-//------------------------------ Verificar Si es Hit -----------------------------
-   for(int i = 0; i < associativity; i++)
-   {
-      if(cache_blocks[i].tag == tag && cache_blocks[i].valid)
-      {  //---------------------ocurrio un hit----------------------
-         for(int j = 0; j < associativity; j++)
-         {
-            if(cache_blocks[j].rp_value < (cache_blocks[i].rp_value)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
-         }
-         hit_o_miss = true;
-         cache_blocks[i].rp_value = 0;
-         result->dirty_eviction = false;
-         result->evicted_address = 0; 
-         if(loadstore)  
-         {  //------- si es un hit store-----------
-            cache_blocks[i].dirty = true; 
-            result->miss_hit = HIT_STORE; 
-         }
-         else           
-         {  //------- si es un hit load------------
-            result->miss_hit = HIT_LOAD;   
-         }
-         //------------Terminando el for-----------
-         i = associativity;
-      }
-   }
-//------------------------------ Se encontro que es un miss -----------------------------
-   if(!hit_o_miss){
-      for(int i = 0; i < associativity; i++)
-      {
-         if(cache_blocks[i].rp_value == (associativity - 1))   
-         {  //----------------si es el bloque del set con menos prioridad---------------------------
-            if (cache_blocks[i].valid == 1)  //-- si el bloque con asosiatividad - 1 es valido, quiere decir
-            {                                //-- que va a salir ese bloque
-               result->evicted_block = true;
-            }
-            
-            result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
-            
-            cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
-            cache_blocks[i].tag = tag;                      //-----tag nuevo guardado en el set----------
-            result->dirty_eviction = (cache_blocks[i].dirty)? true: false;   //----Si hubo dirty eviction-----
-            if(loadstore)  
-            {  // -----------si hubo miss store----------------
-               cache_blocks[i].dirty = true;   
-               result->miss_hit = MISS_STORE;    
-            }
-            else           
-            {  // --------------si hubo miss load---------------
-               cache_blocks[i].dirty = false;   
-               result->miss_hit = MISS_LOAD;    
-            }
-            for(int j = 0; j < associativity; j++)
-            {  //----------suma 1 a los valores de remplazo correspondientes ----------------
-               if(cache_blocks[j].rp_value < (associativity - 1))
-               {  
-                  cache_blocks[j].rp_value += 1;   
-               }  
-            }
-            cache_blocks[i].rp_value = 0; //---- el dato que se ingreso/guardo con remplazo en 0-----
-            i = associativity;            // ---- Termina el for ----
-         } 
-      }
-   }
-
-
-   return OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Verificar hit hit que se cambie el dato en L2 si corresponde
 int lru_L1_L2_replacement_policy (int idx,
-                           int tag,
-                           int idxL2,
-                           int tagL2,
-                           int associativity,
-                           bool loadstore,
-                           entry* cache_blocks,
-                           entry* Other_L1_Core,
-                           int cp, 
-                           entry* cache_blocksL2,                           
-                           operation_result_L2* operation_result_L2,
-                           bool debug,
-                           bool core)
+                                  int tag,
+                                  int idxL2,
+                                  int tagL2,
+                                  int associativity,
+                                  bool loadstore,
+                                  entry* cache_blocks,
+                                  entry* Other_L1_Core,
+                                  int cp, 
+                                  entry* cache_blocksL2,                           
+                                  operation_result_L2* operation_result_L2_,
+                                  bool debug,
+                                  bool core)
 {
 //------------------------------ Verificar si tag e index son validos -----------------------------
    if (idx < 0 || tag < 0 || tagL2 < 0 || idxL2 < 0) {    return ERROR;   }
@@ -216,10 +125,10 @@ int lru_L1_L2_replacement_policy (int idx,
          }
          hit_o_missL1 = true;                   // Declara al sistema que hubo hit en L1
          cache_blocks[i].rp_value = 0;          // Le asigna valor de remplazo 0.
-         operation_result_L2->evicted_addressL1 = 0; // no sale nada de L1 por que es un hit.
+         operation_result_L2_->evicted_addressL1 = 0; // no sale nada de L1 por que es un hit.
          
-         if(core){operation_result_L2->Hit_L1_C2 +=1;}
-         else{operation_result_L2->Hit_L1_C1 +=1;}
+         if(core){operation_result_L2_->Hit_L1_C2 +=1;}
+         else{operation_result_L2_->Hit_L1_C1 +=1;}
 
          if(loadstore){  
             //------- si es un hit store-----------
@@ -229,8 +138,8 @@ int lru_L1_L2_replacement_policy (int idx,
 
             set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // Invalida el dato si está en el otro core ******** // set_coherence_state(tag,associativity,Other_L1_Core[idx],INVALID);
 
-            if(core){ operation_result_L2->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
-            else{ operation_result_L2->Coherence_Inv_C2 +=1; }   
+            if(core){ operation_result_L2_->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
+            else{ operation_result_L2_->Coherence_Inv_C2 +=1; }   
 
             for(int a = 0; a < associativityL2; a++){
                if(cache_blocksL2[a].tag == tagL2){        // SI el dato esta en L2
@@ -242,28 +151,13 @@ int lru_L1_L2_replacement_policy (int idx,
          }
 
          
-
-// YEISON~~~~~~~~~~~~~~~~~~~~~~~~
-   /////////////////////////////////////////////////////////////SERA QUE ESTO HAY QUE HACERLO?
- /*     // -----------Actualizando el valor de reemplazo en L2                            
-            for(int x = 0; x < associativityL2; x++){
-               if(cache_blocksL2[x].tag == tagL2 && cache_blocksL2[x].valid){  
-                  for(int j = 0; j < associativityL2; j++){
-                     if(cache_blocksL2[j].rp_value < (cache_blocksL2[x].rp_value)){  cache_blocksL2[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
-                  }                           
-                  cache_blocksL2[x].rp_value = 0;  
-                  x = associativityL2;     
-               }
-            }
-             */  
-         //------------Terminando el for----------- 
          i = associativity;
       } 
    }
 //------------------------------ Se encontro que es un miss en L1 -----------------------------
    if(!hit_o_missL1){
-      if(core){operation_result_L2->Miss_L1_C2 +=1;}
-      else{operation_result_L2->Miss_L1_C1 +=1;}
+      if(core){operation_result_L2_->Miss_L1_C2 +=1;}
+      else{operation_result_L2_->Miss_L1_C1 +=1;}
       
 
       //------------------------Busca en L2----------------------------------------------
@@ -276,7 +170,7 @@ int lru_L1_L2_replacement_policy (int idx,
             }
             hit_o_missL2 = true;                  // Indica al sistema que hubo un hit en L2
             cache_blocksL2[i].rp_value = 0;       // Asiga un cero al valor de reemplazo
-            operation_result_L2->Hit_L2 += 1;     // suma un hit a L2
+            operation_result_L2_->Hit_L2 += 1;     // suma un hit a L2
             
             if(loadstore){  
                //------- si es un hit store en L2 pone sucio el dato en L2 -----------
@@ -305,7 +199,7 @@ int lru_L1_L2_replacement_policy (int idx,
                
                //----------------si es el bloque del set con menos prioridad---------------------------
                if(cache_blocks[m].rp_value == (associativity - 1)){  
-                  operation_result_L2->evicted_addressL1 = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; 
+                  operation_result_L2_->evicted_addressL1 = (cache_blocks[m].valid)? cache_blocks[m].tag: 0 ; 
                   cache_blocks[m].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                   cache_blocks[m].tag = tag;                      //-----tag nuevo guardado en el set----------
                
@@ -314,9 +208,9 @@ int lru_L1_L2_replacement_policy (int idx,
                      
                      if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
                         set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // Invalida el dato si está en el otro core ******** 
-                        //cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
-                        if(core){ operation_result_L2->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
-                        else{ operation_result_L2->Coherence_Inv_C2 +=1; }  
+                        
+                        if(core){ operation_result_L2_->Coherence_Inv_C1 +=1; } // Aumenta el contador de invalidos en el core correspondiente**
+                        else{ operation_result_L2_->Coherence_Inv_C2 +=1; }  
                      
                      } 
                   }
@@ -324,13 +218,12 @@ int lru_L1_L2_replacement_policy (int idx,
                   else { // LOAD
                      if(otro_core_tiene_el_dato){ // Si estoy leyendo y el otro core tiene el dato...*****
                         set_coherence_state(tag,associativity,Other_L1_Core,SHARED);   // Pongo el dato en el otro core como shared *********
-                       // cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                         cache_blocks[m].state = SHARED;                                    // Cambia el estado a SHARED en L1*****
                      }
                      else{ 
                         cache_blocks[m].state = SHARED;       // Pone el estado del dato en L1 en SHARED si es MSI y el otro core no lo tiene *********   
                         if(cp == 1){
-                           //YEISON~~~~~~~~~~~~~~ 
+                           
                            cache_blocks[m].state = EXCLUSIVE;}      // Pone el estado del dato en L1 en EXCLUSIVE si es MESI y el otro core no tiene el dato *********   
                      }
                   }
@@ -353,7 +246,7 @@ int lru_L1_L2_replacement_policy (int idx,
 
       //------------------------------- Hubo un miss en L1 y en L2----------------------------------------------
       if(!hit_o_missL2){
-         operation_result_L2->Miss_L2 +=1;
+         operation_result_L2_->Miss_L2 +=1;
 
          //----------------Guarda el nuevo valor en L2 ---------------------------
          for(int i = 0; i < associativityL2; i++){
@@ -361,11 +254,11 @@ int lru_L1_L2_replacement_policy (int idx,
             //----------------si es el bloque del set con menos prioridad---------------------------
             if(cache_blocksL2[i].rp_value == (associativityL2 - 1)){  
            
-               operation_result_L2->evicted_addressL2 = (cache_blocksL2[i].valid)? cache_blocksL2[i].tag: 0 ; 
+               operation_result_L2_->evicted_addressL2 = (cache_blocksL2[i].valid)? cache_blocksL2[i].tag: 0 ; 
             
                cache_blocksL2[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                cache_blocksL2[i].tag = tagL2;                      //-----tag nuevo guardado en el set----------
-               operation_result_L2->dirty_eviction += (cache_blocksL2[i].dirty)? 1: 0;   //----Si hubo dirty eviction-----
+               operation_result_L2_->dirty_eviction += (cache_blocksL2[i].dirty)? 1: 0;   //----Si hubo dirty eviction-----
                
                if(loadstore){
                // -----------si hubo miss store----------------
@@ -395,7 +288,7 @@ int lru_L1_L2_replacement_policy (int idx,
 
             //----------------si es el bloque del set con menos prioridad---------------------------
             if(cache_blocks[i].rp_value == (associativity - 1)){  
-               operation_result_L2->evicted_addressL1 = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
+               operation_result_L2_->evicted_addressL1 = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
                cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
                cache_blocks[i].tag = tag;                      //-----tag nuevo guardado en el set----------
                
@@ -407,7 +300,6 @@ int lru_L1_L2_replacement_policy (int idx,
                   cache_blocks[i].state = MODIFIED; // Pone el estado en Modified ********** 
 
                   if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
-                    // cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                      set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // shared el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                   } 
                }
@@ -416,7 +308,6 @@ int lru_L1_L2_replacement_policy (int idx,
                      if(cp == 1){
                         cache_blocks[i].state = EXCLUSIVE; // Pone el estado en EXCLUSIVE si es MESI********** 
                         if (otro_core_tiene_el_dato){ // Si el otro procesador tiene el dato *******
-                        //   cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << endl;
                            set_coherence_state(tag,associativity,Other_L1_Core,INVALID);  // Invalida el dato si está en el otro core (ESTA CONDICION NO CREO QUE PASE)******** 
                         } 
                      }

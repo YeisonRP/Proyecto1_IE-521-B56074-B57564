@@ -390,8 +390,6 @@ TEST(L1_L2, miss_hit){
   int miss_C1 = resultL1L2.Miss_L1_C1;
   int hit_L2 = resultL1L2.Hit_L2;
   int CI_C2 = resultL1L2.Coherence_Inv_C2;
-  //debug
-  cout << "cp = " << cp << ".   LS= "  << LS << "   DATO EN C2? = " << C2_tiene_A << "   asociatividad = " << associativityL1 << endl;
   lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL1,associativityL1,LS,C1_L1,C2_L1,cp,cacheL2,&resultL1L2,false,0);
 
   /*
@@ -520,16 +518,14 @@ TEST(L1_L2, miss_miss){
   int miss_C1 = resultL1L2.Miss_L1_C1;
   int miss_L2 = resultL1L2.Miss_L2;
   int CI_C2 = resultL1L2.Coherence_Inv_C2;
-  //debug
-  cout << "cp = " << cp << ".   LS= "  << LS << "   DATO EN C2? = " << C2_tiene_A << "   asociatividad = " << associativityL1 << endl;
-  
+
   //  funcion que hace todo
   lru_L1_L2_replacement_policy(0,adress_AL1,0,adress_AL1,associativityL1,LS,C1_L1,C2_L1,cp,cacheL2,&resultL1L2,false,0);
 
   /*
     Checks
     Verificación 1: Si C2 tiene el dato:
-                                        LOAD: Verificar que el dato en C2 se queda en S, también en C1
+                                        LOAD: Verificar que el dato en C2 se pone en I, también en C1
                                         STORE: verificar que C2 tenga el dato I y C1 en M
                     Si C2 no tiene el dato: 
                                         LOAD: El dato entra en E a C1. 

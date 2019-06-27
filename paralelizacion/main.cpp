@@ -99,7 +99,7 @@ int main(int argc, char * argv []) {
 
 
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
-  int const NUM_THREADS = 32;
+  int const NUM_THREADS = 4;
   bool LS[NUM_THREADS] = { 0 }; 
   long address[NUM_THREADS] = { 0 };
   int IC; 
@@ -198,13 +198,13 @@ int contador = 0;
       datos_funcion[i]->idxL2 = indexL2[i];
       datos_funcion[i]->tagL2 = tagL2[i];
       datos_funcion[i]->Other_L1_Core = C1_L1[index[i]];//
-      if (access_number % 4 == 0)
+      if (access_counter % 4 == 0)
       {
         datos_funcion[i]->core = 0; //
         datos_funcion[i]->Other_L1_Core = C2_L1[index[i]];//
         datos_funcion[i]->cache_blocks = C1_L1[index[i]]; //
       }
-      access_number += 1;
+      access_counter += 1;
     }
 
 
