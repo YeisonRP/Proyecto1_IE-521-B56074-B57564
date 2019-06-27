@@ -1,13 +1,17 @@
-# Proyecto II IE521 Simulador de Caché con optimizaciones - Yeison Rodriguez B56074 - Pablo Vargas B57564
+# Proyecto III IE521 Simulador de Caché con protocolos de coherencia - Yeison Rodriguez B56074 - Pablo Vargas B57564
 
-Este proyecto consiste en un simulador de memoria caché L1 con Victim caché y 
-una L1 con una L2. Las direcciones son de 32 bits y todo se encuentra parametrizado
-por lo que el usuario decide los valores de la caché
+Este proyecto consiste en un simulador de una jerarquía de memoria con 
+dos núcleos, cada uno con su respectiva caché L1 y ambos comparten una
+caché L2. Los protocolos de coherencia entre los procesadores son MSI
+y MESI.
 
-Esta caché solo utiliza política de remplazo LRU
+Las caché utilizan política de remplazo LRU
 
 Para las pruebas se usa el framework gtest para los test, más adelante se indicará la 
 manera de ejecutarlos.
+
+El proyecto también se realizó utilizando threads con la libreria phtreads, para ver el 
+comportamiento del programa
 
 ## Formato de los datos de entrada de la cache
 Este es el formato de entrada para los datos que recibe la cache:
@@ -29,7 +33,7 @@ Lo cual indicaria que es un store, con la dirección hexadecimal de 8 bits 30003
 se ejecutaron 2 instrucciones entre la referencia anterior y la actual
 
 
-## Guía para construir el proyecto
+## Guía para construir el proyecto sin threads
 Se debe crear el directorio build, posicionarse en el mismo y ejecutar cmake y seguidamente make
 como se presenta a continuación:
 ```
@@ -39,7 +43,17 @@ como se presenta a continuación:
 >> make <target> (l1cache or cachetest)
 ```
 
-## Guía para ejecutar los Test
+
+
+## Guía para construir el proyecto con threads
+Se debe crear el directorio build, posicionarse en el mismo y ejecutar cmake y seguidamente make
+como se presenta a continuación:
+```
+>> cd paralelizacion
+>> make 
+```
+
+## Guía para ejecutar los Test (solo sin threads)
 Diríjase a la carpeta build y ejecute make cachetest, existen muchas maneras de correr los test.
 
 1. Correr todos los test:
@@ -69,10 +83,10 @@ export TEST_DEBUG=1
 ```
 Si se quiere deshabilitar el debug, ponga la variable en 0
 
-## Guía para ejecutar las simulaciones de la caché
+## Guía para ejecutar las simulaciones de la caché (sin threads)
 Para ejecutar el programa diríjase al directorio build/src,
 ```
-gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -opt <optimization>
+gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -cp <coherency protocol>
 ```
 Donde:
 trace: Son los datos que entran a la caché, en el siguiente enlace se dejan trace válidos:
@@ -90,7 +104,31 @@ replacement policy: Políica de remplazo utilizada, únicos valores válidos son
 
 A continuación se deja un ejemplo de una simulación válida:
 ```
-gunzip -c mcf.trace.gz | ./l1cache -t 32 -a 1 -l 32 -opt L2
+gunzip -c mcf.trace.gz | ./l1cache -t 32 -a 1 -l 32 -cp MESI
+```
+
+## Guía para ejecutar las simulaciones de la caché (con threads)
+Para ejecutar el programa diríjase al directorio paralelizacion,
+```
+gunzip -c <trace> | <l1cache executable> -t <cache size KB> -a <associativity> -l <block size in bytes> -cp <coherency protocol>
+```
+Donde:
+trace: Son los datos que entran a la caché, en el siguiente enlace se dejan trace válidos:
+https://drive.google.com/drive/folders/15Z0Z0cpxmuLTrfKjuVrbsAw4fJ9tGI2s
+
+l1cache executable: Es el ejecutable de la caché ya compilada
+
+cache size KB: Tamaño en KB de la caché
+
+associativity: Número de vías de la caché
+
+block size in bytes: Tamaño del bloque en bytes
+
+coherency protocol: Protocolo de coherencia, MSI y MESI
+
+A continuación se deja un ejemplo de una simulación válida:
+```
+gunzip -c mcf.trace.gz | ./a.out -t 32 -a 1 -l 32 -cp MESI
 ```
 
 ### Dependencias
