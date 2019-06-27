@@ -127,13 +127,9 @@ int main(int argc, char * argv []) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
- int x = 0;
+
   while (valido){
-    x +=1;
-    if (x == 100)
-    {
-     // valido = false;
-    }
+
     
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
@@ -165,6 +161,7 @@ int main(int argc, char * argv []) {
     }
     for (int i = 0; i < stop; i++)
     {
+      
       // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------
@@ -172,8 +169,7 @@ int main(int argc, char * argv []) {
     
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &(indexL2[i]), &(tagL2[i])); 
-
-    
+      
       datos_funcion[i]->idx = index[i];
       datos_funcion[i]->tag = tag[i];
       datos_funcion[i]->associativity = associativity; 
