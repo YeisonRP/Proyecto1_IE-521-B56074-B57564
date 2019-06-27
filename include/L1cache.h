@@ -80,6 +80,25 @@ struct operation_result_L2 {
  int  evicted_addressL1;
  int  evicted_addressL2;
 };
+
+
+struct datos_de_funcion {          
+int idx;
+int tag;
+int idxL2;
+int tagL2;
+int associativity;
+bool loadstore;
+entry* cache_blocks;
+entry* Other_L1_Core;
+int cp;
+entry* cache_blocksL2;                           
+operation_result_L2* operation_result_L2_;
+bool debug;
+bool core;
+};
+
+
 //////////////////////////////////////////////////
 
 
@@ -164,19 +183,7 @@ int lru_replacement_policy (int idx,
  * [in/out] cache_block: return the cache operation return (miss_hit_status)
  * [out] result: result of the operation (returns_types)
  */
-int lru_L1_L2_replacement_policy (int idx,
-                           int tag,
-                           int idxL2,
-                           int tagL2,
-                           int associativity,
-                           bool loadstore,
-                           entry* cache_blocks,
-                           entry* Other_L1_Core,
-                           int cp, 
-                           entry* cache_blocksL2,                           
-                           operation_result_L2* operation_result_L2,
-                           bool debug,
-                           bool core);
+void* lru_L1_L2_replacement_policy (void* datos_funcion);
 
 
 

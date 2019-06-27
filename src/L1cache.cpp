@@ -74,118 +74,27 @@ void address_tag_idx_get(long address,
 }
 
 
-///////////////////////////////////////////// NO SE USA ///////////////////////////////////////////////////////////////
 
-// TESTEADA
-int lru_replacement_policy (int idx,
-                             int tag,
-                             int associativity,
-                             bool loadstore,
-                             entry* cache_blocks,  // set de la cache
-                             operation_result* result,
-                             bool debug)
-{
-//------------------------------ Verificar si tag e index son validos -----------------------------
-   if (idx < 0 || tag < 0 ) {    return ERROR;   }
-
-//------------------------------ Verificar si asociatividad es valido -----------------------------
-   double associativity_double = log2((double)associativity); 
-   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
-     
-
-   result->evicted_block = false;      //--- se asume que no salio ningun bloque
-   bool hit_o_miss = false;
-//------------------------------ Verificar Si es Hit -----------------------------
-   for(int i = 0; i < associativity; i++)
-   {
-      if(cache_blocks[i].tag == tag && cache_blocks[i].valid)
-      {  //---------------------ocurrio un hit----------------------
-         for(int j = 0; j < associativity; j++)
-         {
-            if(cache_blocks[j].rp_value < (cache_blocks[i].rp_value)){  cache_blocks[j].rp_value += 1;   }  //suma 1 a la politica de remplazo
-         }
-         hit_o_miss = true;
-         cache_blocks[i].rp_value = 0;
-         result->dirty_eviction = false;
-         result->evicted_address = 0; 
-         if(loadstore)  
-         {  //------- si es un hit store-----------
-            cache_blocks[i].dirty = true; 
-            result->miss_hit = HIT_STORE; 
-         }
-         else           
-         {  //------- si es un hit load------------
-            result->miss_hit = HIT_LOAD;   
-         }
-         //------------Terminando el for-----------
-         i = associativity;
-      }
-   }
-//------------------------------ Se encontro que es un miss -----------------------------
-   if(!hit_o_miss){
-      for(int i = 0; i < associativity; i++)
-      {
-         if(cache_blocks[i].rp_value == (associativity - 1))   
-         {  //----------------si es el bloque del set con menos prioridad---------------------------
-            if (cache_blocks[i].valid == 1)  //-- si el bloque con asosiatividad - 1 es valido, quiere decir
-            {                                //-- que va a salir ese bloque
-               result->evicted_block = true;
-            }
-            
-            result->evicted_address = (cache_blocks[i].valid)? cache_blocks[i].tag: 0 ; 
-            
-            cache_blocks[i].valid = 1;                      //---- Es valido ya que se va a escribir sobre el----
-            cache_blocks[i].tag = tag;                      //-----tag nuevo guardado en el set----------
-            result->dirty_eviction = (cache_blocks[i].dirty)? true: false;   //----Si hubo dirty eviction-----
-            if(loadstore)  
-            {  // -----------si hubo miss store----------------
-               cache_blocks[i].dirty = true;   
-               result->miss_hit = MISS_STORE;    
-            }
-            else           
-            {  // --------------si hubo miss load---------------
-               cache_blocks[i].dirty = false;   
-               result->miss_hit = MISS_LOAD;    
-            }
-            for(int j = 0; j < associativity; j++)
-            {  //----------suma 1 a los valores de remplazo correspondientes ----------------
-               if(cache_blocks[j].rp_value < (associativity - 1))
-               {  
-                  cache_blocks[j].rp_value += 1;   
-               }  
-            }
-            cache_blocks[i].rp_value = 0; //---- el dato que se ingreso/guardo con remplazo en 0-----
-            i = associativity;            // ---- Termina el for ----
-         } 
-      }
-   }
-
-
-   return OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Verificar hit hit que se cambie el dato en L2 si corresponde
-int lru_L1_L2_replacement_policy (int idx,
-                           int tag,
-                           int idxL2,
-                           int tagL2,
-                           int associativity,
-                           bool loadstore,
-                           entry* cache_blocks,
-                           entry* Other_L1_Core,
-                           int cp, 
-                           entry* cache_blocksL2,                           
-                           operation_result_L2* operation_result_L2,
-                           bool debug,
-                           bool core)
+void* lru_L1_L2_replacement_policy (void* datos_funcion)
 {
-//------------------------------ Verificar si tag e index son validos -----------------------------
-   if (idx < 0 || tag < 0 || tagL2 < 0 || idxL2 < 0) {    return ERROR;   }
-
-//------------------------------ Verificar si asociatividad es valido -----------------------------
-   double associativity_double = log2((double)associativity); 
-   if(associativity_double - (int)associativity_double != 0) {  return ERROR;   } 
+   // Arreglando funcion para que sea compatible con pthreads
+   datos_de_funcion *datos = (datos_de_funcion*)datos_funcion;
+   int idx = datos->idx;
+   int tag = datos->tag;
+   int idxL2 = datos->idxL2;
+   int tagL2 = datos->tagL2;
+   int associativity = datos->associativity;
+   bool loadstore = datos->loadstore;
+   entry* cache_blocks = datos->cache_blocks;
+   entry* Other_L1_Core = datos->Other_L1_Core;
+   int cp = datos->cp;
+   entry* cache_blocksL2 = datos->cache_blocksL2;                           
+   operation_result_L2* operation_result_L2 = datos->operation_result_L2_;
+   bool debug = datos->debug;
+   bool core = datos->core;
      
 // -------------------- Creando asociatividad para L2 y otras variables del sistema ----------------
    int associativityL2 = associativity * 2;
@@ -440,7 +349,6 @@ int lru_L1_L2_replacement_policy (int idx,
          }      
       }      
    }
-   return OK;
 }
 
 

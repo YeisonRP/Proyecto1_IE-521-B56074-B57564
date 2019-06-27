@@ -7,7 +7,7 @@
 #include <L1cache.h>
 #include <debug_utilities.h>
 #include <ctime>
-
+#include <pthread.h>
 
 /* Helper funtions */
 void print_usage ()
@@ -29,7 +29,7 @@ int main(int argc, char * argv []) {
   t0 = clock();
 
   //-----------------Se leen los Parse argruments que ingresa el usuario-----------------
-
+ 
   int sizeCacheKB;
   int sizeBloqBytes;
   int associativity;
@@ -102,75 +102,186 @@ int main(int argc, char * argv []) {
 
 
  //-----------------Se comienza con la lectura de los datos de entrada------------------------
-
-  bool LS; 
-  long address;
+  int const NUM_THREADS = 4;
+  bool LS[NUM_THREADS] = { 0 }; 
+  long address[NUM_THREADS] = { 0 };
   int IC; 
   char data [8];
-  int *tag = new int;
-  int *index = new int;
-  struct operation_result_L2 result = {0,0,0,0,0,0,0,0,0,0,0};
-
-  int *tagL2 = new int;
-  int *indexL2 = new int;
+  int tag[NUM_THREADS] = { 0 };
+  int index[NUM_THREADS] = { 0 };
+  struct operation_result_L2 result = { 0 };
+  int tagL2[NUM_THREADS] = { 0 };
+  int indexL2[NUM_THREADS] = { 0 };
+  datos_de_funcion* datos_funcion[NUM_THREADS];
+  pthread_t threads[NUM_THREADS];
 
   bool valido = true;
   int IC_counter = 0;
   int access_counter = 0;
   int access_number = 0;
 
+  int stop = 0;
+  bool multi_threading;
+
+  void* void_pointer[NUM_THREADS];
+
   // int INST_COUNTER = 0;  // Contador de instruccion
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+  int it_num = 0;
   while (valido){
   //  -----------------Se leen los datos de una linea----------------------
     // Lee el numeral
-    cin >> data;
-    if(data[0] != 35){ valido = false; }  // si no es un # se acaba la simulacion
-    else
+    for (int i = 0 ; i < NUM_THREADS ; i++)
     {
-      // Lee si si es load o store 
       cin >> data;
-      LS = atoi(data);
-      // Lee la direccion
-      cin >> data;
-      address = strtol(data, NULL, 16);      
-      // Lee los IC
-      cin >> data;
-      IC = atoi(data);
+      if(data[0] != 35){ valido = false; i = NUM_THREADS; stop = i; }  // si no es un # se acaba la simulacion  
+      else 
+      {
+        // Lee si si es load o store 
+        cin >> data;
+        LS[i] = atoi(data);
+        // Lee la direccion
+        cin >> data;
+        address[i] = strtol(data, NULL, 16);      
+        // Lee los IC
+        cin >> data;
+        IC = atoi(data);
 
-      // Cuenta las ciclos de las instrucciones
-      IC_counter += IC;
-      access_number = access_counter % 4;
-      access_counter += 1;
-      //INST_COUNTER +=1;  // Aumenta la cuenta 
-  
-    // -----------------Se procesan los datos de la linea----------------------
+        // Cuenta las ciclos de las instrucciones
+        IC_counter += IC;
+        stop = i;
+      }
+    }
+    for (int i = 0; i < stop; i++)
+    {
+      // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------
-      address_tag_idx_get(address, *tag_size, *index_size, *offset_size, index, tag); // REVISAR
+      address_tag_idx_get(address[i], *tag_size, *index_size, *offset_size, &index[i], &tag[i]); 
     
           // -----------------Se obtiene el tag y el index para L2----------------------
-      address_tag_idx_get(address, *tag_sizeL2, *index_sizeL2, *offset_size, indexL2, tagL2); // REVISAR
+      address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &indexL2[i], &tagL2[i]); 
 
-      // Eligiendo el CORE
-      if (access_number == 0) // C1
+      
+      datos_funcion[i]->idx = index[i];
+      datos_funcion[i]->tag = tag[i];
+      datos_funcion[i]->associativity = associativity; 
+      datos_funcion[i]->loadstore = LS[i];
+      datos_funcion[i]->cache_blocksL2 = cacheL2[ indexL2[i]]; 
+      datos_funcion[i]->operation_result_L2_ = &result;
+      datos_funcion[i]->cache_blocks = C2_L1[index[i]]; //
+      datos_funcion[i]->core = 1; //
+      datos_funcion[i]->cp = cp;
+      datos_funcion[i]->debug = false;
+      datos_funcion[i]->idxL2 = indexL2[i];
+      datos_funcion[i]->tagL2 = tagL2[i];
+      datos_funcion[i]->Other_L1_Core = C1_L1[index[i]];//
+      if (i == 0)
       {
-        lru_L1_L2_replacement_policy(*index,*tag,*indexL2,*tagL2,associativity,LS,C1_L1[*index],C2_L1[*index],cp,cacheL2[*indexL2],&result,false,0);
+        datos_funcion[i]->core = 0; //
+        datos_funcion[i]->Other_L1_Core = C2_L1[index[i]];//
+        datos_funcion[i]->cache_blocks = C1_L1[index[i]]; //
       }
-      else  // C2
+      void_pointer[i] = (void*)datos_funcion[i]; // casting
+    }
+
+
+    
+    // Revisando que todos sean sets distintos
+    multi_threading = true;
+    for (int i = 0; i < stop; i++)
+    {
+      for (int j = 0; j < stop; j++)
       {
-        lru_L1_L2_replacement_policy(*index,*tag,*indexL2,*tagL2,associativity,LS,C2_L1[*index],C1_L1[*index],cp,cacheL2[*indexL2],&result,false,1);
+        if(j != i) {
+          if (index[i] == index[j] || indexL2[i] == indexL2[j])
+          {
+            j = stop;
+            i = stop;
+            multi_threading = false;
+          }
+        }
       }
+    }
+
+
+    it_num +=1;
+    cout << it_num << endl;
+
+
+    // Si todos los sets son independientes
+    multi_threading = false;
+    if (multi_threading)
+    {
+/*
+      for (long int i = 0 ; i < NUM_THREADS ; ++i)
+      {
+
+        int t;
+        // -----------------Se ingresa en la cache segun la optimizacion----------------------
+        if(opt == 2){   
+          t = pthread_create(&threads[i], NULL, lru_replacement_policy, (void*)dat_[i]);
+        }
+
+
+        // -----------------Se procesan los resultados de result ----------------------      
+      
+        miss_hit_counter[result.miss_hit] += 1; // contador de si hubo hit o miss de load o store
+        if(result.dirty_eviction){  dirty_eviction_counter += 1;  } // Contador de si hubo dirty eviction
+
+          
+  
+          if (t != 0)
+          {
+              cout << "Error in thread creation: " << t << endl;
+          }
+      }
+
+        for(int i = 0 ; i < NUM_THREADS; ++i)
+        {
+            void* status;
+            int t = pthread_join(threads[i], &status);
+            if (t != 0)
+            {
+                cout << "Error in thread join: " << t << endl;
+            }
+        }  */
+    }
+
+    else
+    {
+      for (int i = 0; i < stop; i++)
+      {
+        lru_L1_L2_replacement_policy(void_pointer[i]);
+      }
+      if (it_num == 1735963)
+      {
+        simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,cp, &result);
+      }
+      
+      
     }
   }
 
 
 
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+
   // ------------------------ Se imprimen los resultados  ---------------------- 
 
-    simulation_outL2(sizeCacheKB,associativity,sizeBloqBytes,cp, &result);
     
-cout << "CP" << cp << endl;
+    
+  cout << "CP" << cp << endl;
   //--------------------------------------------Liberando memoria dinamica-------------------------------------
 
   // Liberando memoria del arreglo de la cache
