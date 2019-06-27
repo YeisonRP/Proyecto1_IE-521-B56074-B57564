@@ -127,7 +127,7 @@ int main(int argc, char * argv []) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
+int counter = 0;
   while (valido){
 
     
@@ -161,7 +161,7 @@ int main(int argc, char * argv []) {
     }
     for (int i = 0; i < stop; i++)
     {
-      
+      counter += 1;
       // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------
@@ -169,6 +169,9 @@ int main(int argc, char * argv []) {
     
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &(indexL2[i]), &(tagL2[i])); 
+
+
+
       
       datos_funcion[i]->idx = index[i];
       datos_funcion[i]->tag = tag[i];
@@ -190,7 +193,14 @@ int main(int argc, char * argv []) {
         datos_funcion[i]->cache_blocks = C1_L1[index[i]]; //
       }
       void_pointer[i] = (void*)datos_funcion[i]; // casting
+
+   /*   cout << index[i] << endl;
+      cout << tag[i] << endl;
+      cout << indexL2[i] << endl;
+      cout << tagL2[i] << endl; */
+
       lru_L1_L2_replacement_policy(void_pointer[i]);
+
     }
 
 
