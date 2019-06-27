@@ -132,7 +132,7 @@ int main(int argc, char * argv []) {
     x +=1;
     if (x == 100)
     {
-      valido = false;
+     // valido = false;
     }
     
   //  -----------------Se leen los datos de una linea----------------------
@@ -168,12 +168,12 @@ int main(int argc, char * argv []) {
       // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------
-      address_tag_idx_get(address[i], *tag_size, *index_size, *offset_size, &index[i], &tag[i]); 
+      address_tag_idx_get(address[i], *tag_size, *index_size, *offset_size, &(index[i]), &(tag[i])); 
     
           // -----------------Se obtiene el tag y el index para L2----------------------
-      address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &indexL2[i], &tagL2[i]); 
+      address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &(indexL2[i]), &(tagL2[i])); 
 
-      
+    
       datos_funcion[i]->idx = index[i];
       datos_funcion[i]->tag = tag[i];
       datos_funcion[i]->associativity = associativity; 
@@ -194,6 +194,7 @@ int main(int argc, char * argv []) {
         datos_funcion[i]->cache_blocks = C1_L1[index[i]]; //
       }
       void_pointer[i] = (void*)datos_funcion[i]; // casting
+      lru_L1_L2_replacement_policy(void_pointer[i]);
     }
 
 
@@ -262,7 +263,7 @@ int main(int argc, char * argv []) {
     {
       for (int i = 0; i < stop; i++)
       {
-        lru_L1_L2_replacement_policy(void_pointer[i]);
+        
       }      
     }
   }
