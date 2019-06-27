@@ -109,7 +109,14 @@ int main(int argc, char * argv []) {
   struct operation_result_L2 result = { 0 };
   int tagL2[NUM_THREADS] = { 0 };
   int indexL2[NUM_THREADS] = { 0 };
-  datos_de_funcion* datos_funcion[NUM_THREADS];
+
+  datos_de_funcion **datos_funcion = new datos_de_funcion* [NUM_THREADS];
+  for (int i = 0; i < NUM_THREADS; i++)
+  {
+    datos_funcion[i] = new datos_de_funcion;
+  }
+  void **void_pointer = new void*[NUM_THREADS];
+  
   pthread_t threads[NUM_THREADS];
 
   bool valido = true;
@@ -120,14 +127,14 @@ int main(int argc, char * argv []) {
   int stop = 0;
   bool multi_threading;
 
-  void* void_pointer[NUM_THREADS];
+
 
   // int INST_COUNTER = 0;  // Contador de instruccion
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int counter = 0;
+int contador = 0;
   while (valido){
 
     
@@ -136,6 +143,7 @@ int counter = 0;
     for (int i = 0 ; i < NUM_THREADS ; i++)
     {
       cin >> data;
+ 
       if(data[0] != 35)   // si no es un # se acaba la simulacion
       {  
         valido = false; 
@@ -146,22 +154,26 @@ int counter = 0;
       {
         // Lee si si es load o store 
         cin >> data;
+        
         LS[i] = atoi(data);
         // Lee la direccion
         cin >> data;
+        
         address[i] = strtol(data, NULL, 16);      
         // Lee los IC
         cin >> data;
+        
         IC = atoi(data);
 
         // Cuenta las ciclos de las instrucciones
         IC_counter += IC;
-        stop = i;
+        stop = i + 1;
       }
     }
     for (int i = 0; i < stop; i++)
-    {
-      counter += 1;
+    { 
+     
+     
       // -----------------Se procesan los datos de la linea----------------------
 
           // -----------------Se obtiene el tag y el index para L1----------------------
@@ -170,6 +182,7 @@ int counter = 0;
           // -----------------Se obtiene el tag y el index para L2----------------------
       address_tag_idx_get(address[i], *tag_sizeL2, *index_sizeL2, *offset_size, &(indexL2[i]), &(tagL2[i])); 
 
+      
 
 
       
@@ -192,14 +205,14 @@ int counter = 0;
         datos_funcion[i]->Other_L1_Core = C2_L1[index[i]];//
         datos_funcion[i]->cache_blocks = C1_L1[index[i]]; //
       }
-      void_pointer[i] = (void*)datos_funcion[i]; // casting
-
+      void_pointer[i] = (void*)(datos_funcion[i]); // casting
+ 
    /*   cout << index[i] << endl;
       cout << tag[i] << endl;
       cout << indexL2[i] << endl;
       cout << tagL2[i] << endl; */
 
-      lru_L1_L2_replacement_policy(void_pointer[i]);
+    lru_L1_L2_replacement_policy(void_pointer[i]);
 
     }
 
@@ -221,9 +234,6 @@ int counter = 0;
         }
       }
     }
-
-
-
 
 
     // Si todos los sets son independientes
@@ -264,14 +274,6 @@ int counter = 0;
             }
         }  */
     }
-
-    if(stop == 3)
-    {
-      for (int i = 0; i < stop; i++)
-      {
-        
-      }      
-    }
   }
 
 
@@ -298,6 +300,12 @@ int counter = 0;
   delete[] C2_L1;
   delete[] cacheL2;
 
+   
+  for (int i = 0; i < NUM_THREADS; i++)
+  {
+    delete datos_funcion[i];
+  }
+  delete[] datos_funcion;
   // Liberando memoria de las demas variables
   delete tag_size, index_size, offset_size, cantidad_sets, tag, index;
 
@@ -306,6 +314,6 @@ int counter = 0;
     t1 = clock();
     double exe_time = (double(t1-t0)/CLOCKS_PER_SEC);
     cout << "Tiempo de ejecución : "<< exe_time << " segundos." << endl;
-
+ 
   return 0;
 }
